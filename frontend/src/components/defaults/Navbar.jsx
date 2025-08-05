@@ -76,7 +76,7 @@ function Navbar({ triggerPopup }) {
 
   const fetchRole = async (signer) => {
     try {
-      const contract = new Contract("0x33913593B9ff141CC27a28A532d98CA49F00F99B", Registryabi, signer);
+      const contract = new Contract("0xc580318758459e3f74b5e9CeB6C6A9f900785dFc", Registryabi, signer);
       const role = Number(await contract.getRole())
       setr(role);
       console.log("🎭 User Role:", role);

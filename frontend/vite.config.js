@@ -14,7 +14,7 @@ export default defineConfig({
  server: {
     // This setting allows Vite to accept requests from your ngrok URL.
     allowedHosts: [
-      '3e8f57363c08.ngrok-free.app'
+	 "5b40c65e2b40.ngrok-free.app"
     ],
     // FIX: Add the required headers for camera permissions.
     headers: {
@@ -22,3 +22,4 @@ export default defineConfig({
     }
   }
 })
+

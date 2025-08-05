@@ -10,7 +10,7 @@ function Registration({ SuccessToast, ErrorToast }) {
     account: '',
   });
 
-  const contractAddress = "0x33913593B9ff141CC27a28A532d98CA49F00F99B";
+  const contractAddress = "0xc580318758459e3f74b5e9CeB6C6A9f900785dFc";
   const dappUrl = 'your-dapp.vercel.app';
 
   const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);

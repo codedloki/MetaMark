@@ -8,9 +8,6 @@ import {
   Html5QrcodeScanType,
 } from "html5-qrcode";
 
-
-
-
 const QrBarcodeScanner = () => {
   useEffect(() => {
     const scannerConfig = {
@@ -45,37 +42,32 @@ const QrBarcodeScanner = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-2xl font-bold mb-4 text-white">QR/Barcode Scanner</h1>
+    <div className="flex flex-col items-center justify-center w-full px-4">
+      <h1 className="font-bold mb-4 text-lg md:text-xl text-white">QR/Barcode Scanner</h1>
       <div id="scanner" className="w-full max-w-md rounded-lg overflow-hidden" />
     </div>
   );
 };
+
 function Verification() {
-
-
-
-
   return (
-    <GridBackground className='pl-[30vh] md:pl-0 md:pt-64 mt-20 h-screen overflow-y-scroll'>
-      <div>
-        <h1 className="text-white text-4xl font-bold text-center mb-10">Verification</h1>
+    <GridBackground className='px-4 pt-24 md:pt-64 mt-10 h-screen overflow-y-auto text-center items-center'>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-white text-3xl md:text-4xl font-bold text-center mb-10">Verification</h1>
 
-        <InteractiveGradient
-          color="#1890ff"
-          glowColor="#107667ed"
-          followMouse={true}
-          hoverOnly={false}
-          intensity={100}
-          backgroundColor="#151419"
-          width="100vh"
-          height="50vh"
-          borderRadius="2.25rem"
-          className="flex items-center justify-center"
-        >
-          {/* Barcode Output */}
-          <QrBarcodeScanner/>
-        </InteractiveGradient>
+        <div className="w-full flex justify-center pl-[5vh] mb-[2vh]" >
+          <InteractiveGradient
+            color="#1890ff"
+            glowColor="#107667ed"
+            followMouse={true}
+            hoverOnly={false}
+            intensity={100}
+            backgroundColor="#151419"
+            className="w-full md:w-3/4 lg:w-1/2 rounded-xl p-4 mb-5"
+          >
+            <QrBarcodeScanner />
+          </InteractiveGradient>
+        </div>
       </div>
     </GridBackground>
   );
