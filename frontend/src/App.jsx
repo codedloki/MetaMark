@@ -13,7 +13,7 @@ import Dashboard from './components/dynamic/customer/Dashboard'
 import Team from './components/static/pages/Team'
 import MDashboard from './components/dynamic/manufacturer/MDashboard'
 import Verification from './components/dynamic/customer/Verification'
-
+import ChatApp from './chatApp.jsx';
 
 
 
@@ -55,6 +55,7 @@ function App() {
             <Route path='/about' element={<About />} />
             <Route path='/team' element={<Team />} />
             <Route path='/verify' element={<Verification />} />
+             <Route path='/chat' element={<ChatApp />} />
           </Routes>
           {toasts.map((toast, index) => (
   <Toast
