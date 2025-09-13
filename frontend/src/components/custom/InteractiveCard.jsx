@@ -73,7 +73,7 @@ const InteractiveGradient = ({
     <div
       ref={cardRef}
       className={cn(
-        `relative grid place-content-center place-items-center text-center
+        `relative  grid place-content-center place-items-center text-center
          border transition-all duration-300
          interactive-gradient-card text-foreground`,
         backgroundColor || "bg-white dark:bg-black",

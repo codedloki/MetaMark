@@ -10,15 +10,14 @@ function Registration({ SuccessToast, ErrorToast }) {
     account: '',
   });
 
-  const contractAddress = "0xc580318758459e3f74b5e9CeB6C6A9f900785dFc";
-  const dappUrl = 'your-dapp.vercel.app';
+  // NEW: state for error popup
+  const [errorPopup, setErrorPopup] = useState({ visible: false, message: '' });
 
-  const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const contractAddress = import.meta.env.VITE_REGISTRY_CONTRACT
+  const dappUrl = 'your-dapp.vercel.app';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // 🧠 Reset company if switching from manufacturer to customer
     if (name === 'userType' && value === 'customer') {
       setFormData({ ...formData, userType: value, company: '' });
     } else {
@@ -29,36 +28,46 @@ function Registration({ SuccessToast, ErrorToast }) {
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
+        console.log("contract loaded :", import.meta.env.VITE_REGISTRY_CONTRACT)
+
         const accounts = await window.ethereum.request({
           method: 'eth_requestAccounts',
         });
-
         const account = ethers.getAddress(accounts[0]);
         setFormData((prev) => ({ ...prev, account }));
-
         SuccessToast?.(`Wallet Connected: ${account.slice(0, 6)}...${account.slice(-4)}`);
       } catch (err) {
         console.error('Wallet connection failed:', err);
-        ErrorToast?.('Wallet connection failed');
+        showErrorPopup('Wallet connection failed');
       }
     } else {
-      ErrorToast?.('MetaMask not detected');
+      showErrorPopup('MetaMask not detected');
       window.open(`https://metamask.app.link/dapp/${dappUrl}`, '_blank');
     }
+  };
+
+  // helper to show popup
+  const showErrorPopup = (msg) => {
+    setErrorPopup({ visible: true, message: msg });
+  };
+
+  const closeErrorPopup = () => {
+    setErrorPopup({ visible: false, message: '' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.account) {
-      ErrorToast?.('Please connect your wallet first');
+      showErrorPopup('Please connect your wallet first');
       return;
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, MetamarkAbi, signer);
+
+      const contract = new ethers.Contract(import.meta.env.VITE_REGISTRY_CONTRACT, MetamarkAbi, signer);
 
       if (formData.userType === 'manufacturer') {
         const tx = await contract.registerManufacturer(
@@ -71,14 +80,13 @@ function Registration({ SuccessToast, ErrorToast }) {
         await tx.wait();
         SuccessToast?.('Manufacturer registered successfully! 🏭');
       } else {
-        
-        const tx = await contract.registerCustomer(formData.name)
-        await tx.wait()
-        SuccessToast?.('Customer registration logic goes here! 🧑‍💼');
+        const tx = await contract.registerCustomer(formData.name);
+        await tx.wait();
+        SuccessToast?.('Customer registered successfully! 🧑‍💼');
       }
     } catch (err) {
       console.error('Registration failed:', err);
-      ErrorToast?.('Registration failed ❌');
+      showErrorPopup('Registration failed ❌');
     }
   };
 
@@ -129,6 +137,7 @@ function Registration({ SuccessToast, ErrorToast }) {
                 type="radio"
                 name="userType"
                 value="manufacturer"
+                className='text-black bg-white'
                 checked={formData.userType === 'manufacturer'}
                 onChange={handleChange}
                 required
@@ -177,6 +186,28 @@ function Registration({ SuccessToast, ErrorToast }) {
           </button>
         </div>
       </form>
+
+      {/* ERROR POPUP */}
+      {errorPopup.visible && (
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50"
+          onClick={closeErrorPopup}
+        >
+          <div
+            className="bg-red-600 rounded-lg p-6 max-w-sm text-white shadow-lg"
+            onClick={(e) => e.stopPropagation()} // prevent modal close on clicking inside box
+          >
+            <h2 className="text-xl font-bold mb-4">Error</h2>
+            <p className="mb-6">{errorPopup.message}</p>
+            <button
+              onClick={closeErrorPopup}
+              className="bg-white text-red-600 font-semibold px-4 py-2 rounded hover:bg-gray-200 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

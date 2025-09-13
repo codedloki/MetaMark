@@ -26,7 +26,7 @@ const SeasonCard = ({
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-end p-6 w-full md:w-1/3 h-[350px] lg:h-[450px] bg-black rounded-lg overflow-hidden shadow-lg transition-all duration-500 hover:w-2/3",
+        "group relative flex flex-col justify-end p-6 w-full md:w-1/3 h-[350px] lg:h-[400px] bg-black rounded-lg overflow-hidden shadow-lg transition-all duration-500 hover:w-2/3",
         // Make the cursor a pointer if a path exists to indicate it's clickable
         path ? "cursor-pointer" : "",
         className
