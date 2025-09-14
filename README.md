@@ -1,4 +1,4 @@
-# <center>METAMARK</center>
+<h1 align="center"> METAMARK </h1>
 
 <hr>
 
