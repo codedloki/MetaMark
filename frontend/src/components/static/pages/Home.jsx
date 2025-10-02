@@ -5,6 +5,8 @@ import {Popover,PopoverContent,PopoverTrigger} from '../../custom/Popoverit'
 import InteractiveGradient from "../../custom/InteractiveCard";
 import ScrollReveal from "../../custom/ScrollReveal";
 import ParticleOrbitEffect from "../../custom/SmokeCursor";
+import Stepper, { Step } from '../../custom/Stepper';
+
 function Home({isPopoverOpen,setIsPopoverOpen,SuccessToast,ErrorToast}) {
   return (
     
@@ -72,27 +74,11 @@ function Home({isPopoverOpen,setIsPopoverOpen,SuccessToast,ErrorToast}) {
     </div>
 
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <PopoverContent className="w-screen h-2/4">
-                    
+       <PopoverContent className="w-full h-screen flex justify-center items-center p-4">
+  <Registration SuccessToast={SuccessToast} ErrorToast={ErrorToast}/>
+</PopoverContent>
 
-          <div className="text-center">
-            <Registration  SuccessToast={SuccessToast} ErrorToast={ErrorToast}/>
-          
-            {/* <p className="text-sm mb-2">Please connect to continue</p>
-            <button
-              onClick={() => {
-                // handle wallet connection logic here or close popup
-                setIsPopoverOpen(false);
-              }}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Connect Now
-            </button> */}
-          </div>
-           
-        </PopoverContent>
       </Popover>
-
 
 
 

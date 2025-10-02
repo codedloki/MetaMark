@@ -39,6 +39,9 @@ contract Registry {
         _;
     }
 
+    event ManufacturerRegistered(address indexed wallet, string name, string companyName, uint256 stake);
+
+
     function registerManufacturer(
         string memory _name, 
         string memory _companyName
@@ -61,6 +64,7 @@ contract Registry {
         
         // Mark company name as used
         usedCompanyNames[lowerCompanyName] = true;
+        emit ManufacturerRegistered(msg.sender, _name, _companyName, msg.value);
     }
 
     function registerCustomer(string memory _nickname) public {
@@ -129,4 +133,7 @@ contract Registry {
         Customer memory c = customers[_wallet];
         return (c.nickname, c.wallet);
     }
+    function isManufacturer(address _user) external view returns (bool) {
+       return userRoleMap[_user] == Role.Manufacturer;
+}
 }

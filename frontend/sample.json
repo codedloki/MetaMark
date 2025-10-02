@@ -1,0 +1,11 @@
+{
+  "batchId": "BATCH001",
+  "mfgDate": "2024-01-01",
+  "expiryDate": "2026-01-01",
+  "ipfsHash": "QmExampleHash1234567890",
+  "serials": [
+    "SERIAL001",
+    "SERIAL002",
+    "SERIAL003"
+  ]
+}
