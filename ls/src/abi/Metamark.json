@@ -1,0 +1,172 @@
+[
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "wallet",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "nickname",
+          "type": "string"
+        }
+      ],
+      "name": "CustomerRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "wallet",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "company",
+          "type": "string"
+        }
+      ],
+      "name": "ManufacturerRegistered",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "customers",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "nickname",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "customer_wallet",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isRegistered",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "manufacturers",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "owner",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "company",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "manufacturer_wallet",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isRegistered",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_owner",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_company",
+          "type": "string"
+        }
+      ],
+      "name": "registerManufacturer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_nickname",
+          "type": "string"
+        }
+      ],
+      "name": "registerCustomer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_wallet",
+          "type": "address"
+        }
+      ],
+      "name": "getManufacturer",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "owner",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "companyname",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    }
+  ]

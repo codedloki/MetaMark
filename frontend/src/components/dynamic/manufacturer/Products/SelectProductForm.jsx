@@ -55,11 +55,14 @@ export default function SelectProductForm({
 
         const productIds =
           await productRegistryContract.getProductsByManufacturer();
+          console.log(productIds)
 
         const fetchedProducts = [];
         for (const productId of productIds) {
           try {
             const product = await productRegistryContract.getProduct(productId);
+            console.log(`Product:${product}`)
+
             const ipfsHash = product[0];
 
             let productName = "Unnamed Product";
@@ -67,6 +70,7 @@ export default function SelectProductForm({
               const response = await axios.get(
                 `https://ipfs.io/ipfs/${ipfsHash}`
               );
+              console.log(response)
               productName = response.data.productName || productName;
             } catch (ipfsError) {
               console.error(

@@ -50,7 +50,6 @@
 //         },
 //       };
 
-
 //       try {
 //         console.log("Manual XMTP signer created. Calling Client.create() now...");
 
@@ -99,33 +98,22 @@
 
 // export default ChatComp;
 
+import React, { useState, useRef } from "react";
+import { GridBackground } from "../static/pages/CustomBack";
+import type { Signer, Identifier } from "@xmtp/browser-sdk";
+import { Client, ConsentState } from "@xmtp/browser-sdk";
+import { ethers } from "ethers";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { GridBackground } from '../static/pages/CustomBack';
-import type { Signer, Identifier } from '@xmtp/browser-sdk';
-import { Client, ConsentState } from '@xmtp/browser-sdk';
-import { ethers } from 'ethers';
-
-// Helper function to clear IndexedDB for XMTP
+// Helper to clear XMTP IndexedDB
 async function clearXmtpIndexedDB(): Promise<void> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.deleteDatabase('xmtp_db'); // This is the default name for browser-sdk
-    request.onsuccess = () => {
-      console.log("xmtp_db IndexedDB deleted successfully.");
-      resolve();
-    };
-    request.onerror = (event) => {
-      console.error("Error deleting xmtp_db IndexedDB:", event.target.error);
-      reject(event.target.error);
-    };
-    request.onblocked = () => {
-      console.warn("xmtp_db IndexedDB deletion blocked. Ensure all tabs are closed.");
-      // Handle cases where other tabs might be holding a connection
-      reject(new Error("IndexedDB deletion blocked. Close other tabs using this app."));
-    };
+    const request = indexedDB.deleteDatabase("xmtp_db");
+    request.onsuccess = () => resolve();
+    request.onerror = (event) => reject(event.target.error);
+    request.onblocked = () =>
+      reject(new Error("IndexedDB deletion blocked. Close other tabs."));
   });
 }
-
 
 const ChatComp: React.FC = () => {
   const [xmtpClient, setXmtpClient] = useState<Client | null>(null);
@@ -133,19 +121,16 @@ const ChatComp: React.FC = () => {
   const isConnectingRef = useRef(false);
 
   const handleConnection = async (): Promise<void> => {
-    if (isConnectingRef.current || xmtpClient) {
-      console.log("Already connecting or client already exists.");
-      return;
-    }
+    if (isConnectingRef.current || xmtpClient) return;
 
     isConnectingRef.current = true;
     setConnectionError(null);
 
     try {
-      console.log("Button Clicked");
-
       if (!window.ethereum) {
-        setConnectionError('No Ethereum wallet detected. Please install MetaMask.');
+        setConnectionError(
+          "No Ethereum wallet detected. Please install MetaMask.",
+        );
         isConnectingRef.current = false;
         return;
       }
@@ -153,8 +138,7 @@ const ChatComp: React.FC = () => {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const ethersSigner = await provider.getSigner();
       const accountAddress = await ethersSigner.getAddress();
-
-      console.log("Wallet Connected, Address:", accountAddress);
+      console.log(accountAddress);
 
       const accountIdentifier: Identifier = {
         identifier: accountAddress,
@@ -165,53 +149,50 @@ const ChatComp: React.FC = () => {
         type: "EOA",
         getIdentifier: () => accountIdentifier,
         signMessage: async (message: string): Promise<Uint8Array> => {
-          console.log("Requesting signature from wallet for message:", message);
           const signature = await ethersSigner.signMessage(message);
-          console.log("Signature received:", signature);
-
-          const signatureBytes = new Uint8Array(
-            signature.slice(2).match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+          return new Uint8Array(
+            signature
+              .slice(2)
+              .match(/.{1,2}/g)!
+              .map((b) => parseInt(b, 16)),
           );
-
-          return signatureBytes;
         },
       };
 
-      try {
-        console.log("Manual XMTP signer created. Calling Client.create() now...");
-        const client = await Client.create(manualXmtpSigner, { env: 'production' });
-        setXmtpClient(client);
-        console.log("XMTP Client created successfully!", client);
+      const client = await Client.create(manualXmtpSigner, {
+        env: "production",
+      });
+      setXmtpClient(client);
 
-        const chatIdentifiers: Identifier[] = [
-          { identifier: "0x1adca7964a7d40fc48482c15164a60e20749fbcc", identifierKind: "Ethereum" }
-        ];
+      // ✅ Wrap recipient wallet in Identifier
+      const recipientIdentifier: Identifier = {
+        identifier: "0xb72937218804cee992473d26283682b621fb7244", // recipient wallet
+        identifierKind: "Ethereum",
+      };
 
-        const response = await client.canMessage(chatIdentifiers);
-        console.log("Can message chatIdentifiers:", response);
+      const canMessage = await client.canMessage([recipientIdentifier]);
+      // console.log(` Retreived Message :${canMessage}`);
+      canMessage.forEach((value, key) => {
+        console.log(`Address: ${key}, Can message: ${value}`);
+      });
 
-        const dm = await client.conversations.newDm('0479daf2c7dfe16d4eff51b694efadac6934b02262bf4c57b7db31f915144d1f');
-        dm.send("Hello");
-        dm.send("Dipesh here");
-
-        const allowedConversations = await client.conversations.list({ consentStates: [ConsentState.Allowed] });
-        console.log("Allowed Conversations:", allowedConversations);
-
-      } catch (error: any) {
-        console.error("Error creating XMTP Client:", error);
-        if (error.message && error.message.includes('Cannot register a new installation because the InboxID')) {
-          setConnectionError(
-            "XMTP Error: You have reached the maximum number of installations for this wallet. " +
-            "Please try clearing local data, or manage installations via the XMTP Developer Console."
-          );
-        } else {
-          setConnectionError(`An unexpected XMTP error occurred: ${error.message}`);
-        }
+      if (!canMessage) {
+        console.error("Recipient is not on XMTP network yet.");
+        return;
       }
 
+      const conversation =
+        await client.conversations.newConversation(recipientIdentifier);
+      await conversation.send("Hello 👋");
+      await conversation.send("Dipesh here");
+
+      const allowedConversations = await client.conversations.list({
+        consentStates: [ConsentState.Allowed],
+      });
+      console.log("Allowed Conversations:", allowedConversations);
     } catch (error: any) {
-      console.error("An error occurred during connection:", error);
-      setConnectionError(`Connection failed: ${error.message}`);
+      console.error("XMTP Connection Error:", error);
+      setConnectionError(error.message);
     } finally {
       isConnectingRef.current = false;
     }
@@ -221,20 +202,25 @@ const ChatComp: React.FC = () => {
     setConnectionError(null);
     try {
       await clearXmtpIndexedDB();
-      setXmtpClient(null); // Reset client state
-      console.log("Local XMTP data cleared. Please try connecting again.");
-      alert("Local XMTP data cleared. You might need to refresh the page or reconnect.");
+      setXmtpClient(null);
+      alert("Local XMTP data cleared. Refresh or reconnect.");
     } catch (error: any) {
-      setConnectionError(`Failed to clear local XMTP data: ${error.message}`);
+      setConnectionError(error.message);
     }
   };
-
 
   return (
     <GridBackground className="h-screen overflow-y-scroll md-hidden">
       <div className="bg-blue-600 p-4 rounded-xl text-white">
-        <button onClick={handleConnection} disabled={isConnectingRef.current || !!xmtpClient}>
-          {isConnectingRef.current ? "Connecting..." : xmtpClient ? "Connected" : "Connect Xmtp"}
+        <button
+          onClick={handleConnection}
+          disabled={isConnectingRef.current || !!xmtpClient}
+        >
+          {isConnectingRef.current
+            ? "Connecting..."
+            : xmtpClient
+              ? "Connected"
+              : "Connect Xmtp"}
         </button>
         {xmtpClient && (
           <div className="mt-2">
@@ -243,22 +229,13 @@ const ChatComp: React.FC = () => {
               onClick={handleClearLocalXmtpData}
               className="mt-2 p-2 bg-yellow-500 hover:bg-yellow-600 rounded text-black"
             >
-              Clear Local XMTP Data (Soft Revoke)
+              Clear Local XMTP Data
             </button>
           </div>
         )}
         {connectionError && (
           <div className="text-red-500 mt-2 p-2 bg-red-100 rounded">
-            <p>{connectionError}</p>
-            {connectionError.includes("maximum number of installations") && (
-              <p className="text-sm mt-1">
-                Consider clearing local XMTP data (button above or manually via browser settings)
-                or managing installations through the official{" "}
-                <a href="https://xmtp.com/login" target="_blank" rel="noopener noreferrer" className="underline">
-                  XMTP Developer Console
-                </a>.
-              </p>
-            )}
+            {connectionError}
           </div>
         )}
       </div>

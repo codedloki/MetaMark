@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract Registry {
-    uint256 public stakeAmount = 10 ether;
-    
+    uint256 public stakeAmount = 0.00005 ether;
+
     enum Role {
         None,
         Manufacturer,
-        Customer 
+        Customer
     }
 
     struct Manufact {
@@ -26,8 +26,8 @@ contract Registry {
     mapping(address => Role) private userRoleMap;
     mapping(address => Manufact) private manufacturers;
     mapping(address => Customer) private customers;
-    mapping(string => bool) private usedCompanyNames; 
-    mapping(string => bool) private usedusername; 
+    mapping(string => bool) private usedCompanyNames;
+    mapping(string => bool) private usedusername;
 
     modifier onlyManufacturer() {
         require(userRoleMap[msg.sender] == Role.Manufacturer, "Manufacturer access only");
@@ -43,16 +43,16 @@ contract Registry {
 
 
     function registerManufacturer(
-        string memory _name, 
+        string memory _name,
         string memory _companyName
     ) public payable {
         require(userRoleMap[msg.sender] == Role.None, "Already registered");
         require(msg.value >= stakeAmount, "Insufficient stake amount");
-        
+
         // Convert to lowercase for case-insensitive comparison
         string memory lowerCompanyName = _toLower(_companyName);
         require(!usedCompanyNames[lowerCompanyName], "Company name already registered");
-        
+
         userRoleMap[msg.sender] = Role.Manufacturer;
         manufacturers[msg.sender] = Manufact({
             name: _name,
@@ -61,7 +61,7 @@ contract Registry {
             stake: msg.value,
             isVerified:true
         });
-        
+
         // Mark company name as used
         usedCompanyNames[lowerCompanyName] = true;
         emit ManufacturerRegistered(msg.sender, _name, _companyName, msg.value);
@@ -82,7 +82,7 @@ contract Registry {
     function _toLower(string memory _str) internal pure returns (string memory) {
         bytes memory bStr = bytes(_str);
         bytes memory bLower = new bytes(bStr.length);
-        
+
         for (uint i = 0; i < bStr.length; i++) {
             // Uppercase ASCII characters (A-Z)
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
@@ -99,9 +99,9 @@ contract Registry {
     }
 
     function getManufacturer() public view returns (
-        string memory name, 
-        string memory companyName, 
-        address wallet, 
+        string memory name,
+        string memory companyName,
+        address wallet,
         uint256 stake
     ) {
         Manufact memory m = manufacturers[msg.sender];
@@ -109,8 +109,8 @@ contract Registry {
     }
 
       function getManufacturer1(address _wallet) public view returns (
-        string memory name, 
-        string memory companyName, 
+        string memory name,
+        string memory companyName,
         uint256 stake
     ) {
         Manufact memory m = manufacturers[_wallet];
@@ -119,7 +119,7 @@ contract Registry {
 
 
     function getCustomer() public view returns (
-        string memory nickname, 
+        string memory nickname,
         address wallet
     ) {
         Customer memory c = customers[msg.sender];
@@ -127,7 +127,7 @@ contract Registry {
     }
 
       function getCustomer1(address _wallet) public view returns (
-        string memory nickname, 
+        string memory nickname,
         address wallet
     ) {
         Customer memory c = customers[_wallet];

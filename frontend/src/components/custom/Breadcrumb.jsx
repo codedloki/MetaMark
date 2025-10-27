@@ -1,26 +1,53 @@
-import React  from "react";
-import { Link } from "react-router-dom";
-const Breadcrumb = ({ items }) => (
-  <nav className="text-gray-500 text-sm" aria-label="Breadcrumb">
-    <ol className="list-none p-0 inline-flex">
-      {items.map((item, idx) => (
-        <li key={idx} className="flex items-center">
-          {item.href ? (
-            <Link to={item.href} className="hover:text-blue-600">
-              {item.label}
-            </Link>
-          ) : (
-            <span className="text-gray-700 font-semibold">{item.label}</span>
-          )}
-          {idx < items.length - 1 && (
-            <svg className="mx-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          )}
-        </li>
-      ))}
-    </ol>
-  </nav>
-);
+import React from 'react';
 
-export default Breadcrumb;
+/**
+ * Breadcrumbs Component
+ * Displays the current navigation path and allows clicking on previous steps.
+ * @param {Array<object>} crumbs - The list of breadcrumb objects ({label: string, href?: string}).
+ * @param {function} onCrumbClick - Function to call when a preceding crumb is clicked.
+ */
+const Breadcrumbs = ({ crumbs, onCrumbClick }) => {
+  // Ensure crumbs is an array before trying to map, though React usually handles this.
+  // The issue here is the content of the array, not the array itself.
+  if (!Array.isArray(crumbs)) {
+    return null; 
+  }
+  
+  return (
+    // Tailwind styling for the navigation container
+    <nav className="text-sm font-medium text-gray-500 mb-4">
+      <ol className="list-none p-0 inline-flex">
+        {crumbs.map((crumb, index) => (
+          // Key for list item iteration
+          <li key={index} className="flex items-center">
+            {/* Conditional rendering of the chevron separator for all but the first item */}
+            {index > 0 && (
+              <svg className="fill-current w-3 h-3 mx-2" viewBox="0 0 24 24">
+                <path d="M7.33 24l-2.83-2.829 9.339-9.175-9.339-9.167 2.83-2.829 12.17 12z"/>
+              </svg>
+            )}
+
+            {/* If it's not the last crumb, it's clickable */}
+            {index < crumbs.length - 1 ? (
+              <button
+                onClick={() => onCrumbClick(index)}
+                className="text-blue-600 hover:text-blue-800 focus:outline-none"
+              >
+                {/* 🛑 FIX: Access the 'label' property of the crumb object */}
+                {crumb.label}
+              </button>
+            ) : (
+              // The last crumb is the current page and is not clickable
+              <span className="text-gray-900">
+                {/* 🛑 FIX: Access the 'label' property of the crumb object */}
+                {crumb.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+};
+
+export default Breadcrumbs;

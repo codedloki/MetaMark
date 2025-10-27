@@ -232,7 +232,7 @@ export default function ProductForm() {
     <div className="mt-4 text-3xl text-white">
       <GridBackground className="pl-[30vh] md:pl-0 h-screen overflow-y-scroll relative">
         <div className="relative flex flex-col font-[Manrope,_'Noto_Sans',_sans-serif] min-h-screen mt-[100vh] md:mt-[40vh] md:w-[100vh] pt-[35vh] md:pt-[0vh] ml-[20vh] md:ml-[10vh] mr-[20vh] overflow-y-auto md:mb-[10vh]">
-          <Breadcrumb items={breadcrumbItems} />
+          <Breadcrumb crumbs={breadcrumbItems} />
           <br />
           <div>
             {stage === "buttons" ? (
