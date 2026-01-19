@@ -10,7 +10,7 @@
   SidebarFooter,
   SidebarHeader,
 } from "../../components/ui/sidebar"
-
+import { useState,useEffect } from 'react'
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Link } from "react-router-dom";
 import {
@@ -37,10 +37,66 @@ import {
   User2,
   ChevronUp,
 } from "lucide-react"
+ 
 import { Button } from "../../components/ui/button"
 
+import ConnectedW from '../body/dynamic/wallet/ConnectedW.jsx'
+import {BrowserProvider} from 'ethers'
 
 export default  function AppSidebar() {
+   const [connected,setConnected] = useState(false)
+   const [account,setAccount] = useState()
+   const [network,setNetwork] = useState()
+   const [Signer,setSigner] = useState()
+
+     useEffect(() => {
+    const checkConnection = async () => {
+      if (window.ethereum) {
+        const provider = new BrowserProvider(window.ethereum);
+        try {
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            setSigner(await provider.getSigner());
+            localStorage.setItem("account", accounts[0]);
+            setConnected(true);
+          }
+
+          const net = await window.ethereum.request({ method: "net_version" });
+          setNetwork(net);
+        } catch (error) {
+          console.error("Error checking wallet:", error);
+        }
+      }
+    };
+
+    checkConnection();
+
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", async (accounts) => {
+        if (accounts.length > 0) {
+          const provider = new BrowserProvider(window.ethereum);
+          setAccount(accounts[0]);
+          setSigner(await provider.getSigner());
+          setConnected(true);
+          localStorage.setItem("account", accounts[0]);
+        } else {
+          disconnectWallet();
+        }
+      });
+
+      window.ethereum.on("chainChanged", () => window.location.reload());
+    }
+
+    return () => {
+      if (window.ethereum?.removeListener) {
+        window.ethereum.removeListener("accountsChanged", () => {});
+        window.ethereum.removeListener("chainChanged", () => {});
+      }
+    };
+  }, []);
   return (
     <Sidebar className="">
       <SidebarHeader className="text-white text-3xl font-bold flex items-center justify-center h-16">
@@ -82,8 +138,18 @@ export default  function AppSidebar() {
         </SidebarContent>
         <SidebarFooter>
             
-            <div className="mb-10 text-center text-sm text-gray-400 items-center justify-center ml-[20%]">
-            <ConnectButton showBalance={false} className="p-20" />
+            <div className="mb-10 text-center text-sm text-gray-400 items-center justify-center ">
+           {
+             connected ? (
+                         <ConnectedW/>
+
+             ):
+               
+                                      <ConnectButton showBalance={false} className="p-20" />
+
+
+           }
+          
             </div>
             
             </SidebarFooter>

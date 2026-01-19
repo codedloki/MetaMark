@@ -7,7 +7,7 @@ import { ShieldCheck, Factory, User, Store } from "lucide-react";
 
 export default function Register() {
   return (
-    <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center px-6">
+    <div className="h-full w-full bg-gray-50 flex items-center justify-center ">
       <Card className="w-full max-w-5xl shadow-xl rounded-2xl">
         <CardHeader className="text-center space-y-3">
           <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
@@ -24,12 +24,14 @@ export default function Register() {
         <CardContent>
           <Tabs defaultValue="manufacturer" className="w-full">
             <TabsList className="grid grid-cols-3 mb-8">
-              <TabsTrigger value="manufacturer" className="flex gap-2">
+              <TabsTrigger value="manufacturer" className="flex  gap-2">
                 <Factory className="h-4 w-4" /> Manufacturer
               </TabsTrigger>
+              {/*
               <TabsTrigger value="retailer" className="flex gap-2">
                 <Store className="h-4 w-4" /> Retailer
               </TabsTrigger>
+              */}
               <TabsTrigger value="consumer" className="flex gap-2">
                 <User className="h-4 w-4" /> Consumer
               </TabsTrigger>
@@ -37,30 +39,40 @@ export default function Register() {
 
             {/* Manufacturer */}
             <TabsContent value="manufacturer">
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label>Company Name</Label>
+              <form className="grid grid-cols-1 md:grid-cols-2 mb-8 gap-6">
+                <div className="">
+                  <Label  className="p-2">Company Name</Label>
                   <Input placeholder="ABC Manufacturing Pvt Ltd" />
                 </div>
+
+                <div>
+                  <Label className="p-2">Owner Name :</Label>
+                  <Input placeholder="Enter Owner Name:"/>
+                </div>
+                {/*
                 <div>
                   <Label>Email</Label>
                   <Input type="email" placeholder="company@email.com" />
                 </div>
+                */} 
                 <div>
-                  <Label>Wallet Address</Label>
+                  <Label className="p-2">Wallet Address</Label>
                   <Input placeholder="0x..." />
                 </div>
+                {/*
                 <div>
                   <Label>Password</Label>
                   <Input type="password" placeholder="••••••••" />
                 </div>
+                */}
                 <div className="md:col-span-2">
-                  <Button className="w-full">Register as Manufacturer</Button>
+                  <Button className="w-full text-white">Register as Manufacturer</Button>
                 </div>
               </form>
             </TabsContent>
 
             {/* Retailer */}
+            {/*
             <TabsContent value="retailer">
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -84,26 +96,30 @@ export default function Register() {
                 </div>
               </form>
             </TabsContent>
-
+*/}
             {/* Consumer */}
             <TabsContent value="consumer">
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label>Full Name</Label>
-                  <Input placeholder="John Doe" />
+                  <Label className="p-4">Username:</Label>
+                  <Input placeholder="johndoe" />
                 </div>
-                <div>
-                  <Label>Email</Label>
+{/*                <div>
+                 <Label>Email</Label>
                   <Input type="email" placeholder="user@email.com" />
                 </div>
+            */}
+
                 <div>
-                  <Label>Wallet Address</Label>
+                  <Label className="p-4">Wallet Address</Label>
                   <Input placeholder="0x..." />
                 </div>
+                {/*
                 <div>
                   <Label>Password</Label>
                   <Input type="password" placeholder="••••••••" />
                 </div>
+                */}
                 <div className="md:col-span-2">
                   <Button className="w-full">Register as Consumer</Button>
                 </div>

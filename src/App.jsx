@@ -22,14 +22,14 @@ function App() {
       <div className='w-[10%] shrink-0'>
         <AppSidebar />
       </div>
-      <div className=" flex-1 bg-white">
+      <div className="h-[100%] flex-1 bg-white w-full">
 
         <div className="ml-20 p-35 pr-150 ">
          
             <Routes>
               <Route path='/' element={<Home />} /> 
               <Route path='/about' element={<About />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/register" element={<Register className="w-full" />} />
               </Routes>
          
 
