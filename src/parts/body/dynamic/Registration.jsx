@@ -3,126 +3,253 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { ShieldCheck, Factory, User, Store } from "lucide-react";
+import { ShieldCheck, Factory, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { Info } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useUser } from "../../providers/UsersProvider.jsx";
 
 export default function Register() {
+  const { registry } = useUser();
+
+  const [address, setAddress] = useState("");
+
+  /* =======================
+     CONSUMER STATE
+  ======================= */
+  const [customdata, setCustomdata] = useState({
+    username: "",
+    accType: "",
+    contact: "",
+  });
+  const [custermstate, setCustermstate] = useState(false);
+  const [custErrors, setCustErrors] = useState({});
+
+  /* =======================
+     MANUFACTURER STATE
+  ======================= */
+  const [manufactdata, setManufactdata] = useState({
+    company: "",
+    owner: "",
+    email: "",
+  });
+  const [manterms, setManterms] = useState(false);
+  const [manErrors, setManErrors] = useState({});
+
+  /* =======================
+     WALLET
+  ======================= */
+  useEffect(() => {
+    const getWallet = async () => {
+      if (!window.ethereum) return alert("Install MetaMask");
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      setAddress(accounts[0]);
+    };
+
+    getWallet();
+  }, []);
+
+  /* =======================
+     HANDLERS
+  ======================= */
+  const handleCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setCustomdata((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleManufacturerChange = (e) => {
+    const { name, value } = e.target;
+    setManufactdata((prev) => ({ ...prev, [name]: value }));
+  };
+
+  /* =======================
+     VALIDATION
+  ======================= */
+  const validateConsumer = () => {
+    const errors = {};
+
+    if (!customdata.username || customdata.username.length < 3)
+      errors.username = "Username must be at least 3 characters";
+
+    if (!/^[a-zA-Z0-9_]+$/.test(customdata.username))
+      errors.username = "Username must be alphanumeric";
+
+    if (customdata.accType === "")
+      errors.accType = "Account type is required";
+
+    if (!customdata.contact || customdata.contact.length < 5)
+      errors.contact = "Contact must be at least 5 characters";
+
+    if (!custermstate)
+      errors.terms = "You must accept terms";
+
+    setCustErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateManufacturer = () => {
+    const errors = {};
+
+    if (!manufactdata.company || manufactdata.company.length < 3)
+      errors.company = "Company name must be at least 3 characters";
+
+    if (!manufactdata.owner || manufactdata.owner.length < 3)
+      errors.owner = "Owner name must be at least 3 characters";
+
+    if (!manufactdata.email)
+      errors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(manufactdata.email))
+      errors.email = "Invalid email format";
+
+    if (!manterms)
+      errors.terms = "You must accept terms";
+
+    setManErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /* =======================
+     SUBMIT
+  ======================= */
+  const registerCustomer = async (e) => {
+    e.preventDefault();
+    if (!validateConsumer()) return;
+
+    await registry.registerCustomer(
+      customdata.username,
+      Number(customdata.accType),
+      customdata.contact
+    );
+
+    console.log("Customer registered");
+    window.location.reload(true)
+  };
+
+  const registerManufacturer = async (e) => {
+    e.preventDefault();
+    if (!validateManufacturer()) return;
+
+    console.log("Manufacturer registered", manufactdata);
+    const stakeAmount = await registry.STAKE_AMOUNT()
+     console.log("Stake amount (wei):", stakeAmount.toString());
+     const fun = await registry.interface.getFunction("registerManufacturer")
+     console.log("Function state :" , fun )
+
+     const tx = await registry.registerManufacturer(manufactdata.owner,manufactdata.company,manufactdata.email,{
+      value:stakeAmount
+     })
+
+     console.log("Transaction sent:",tx.hash)
+     await tx.wait()
+     alert("Manufacturer Registered Successfully")
+     window.location.reload(true)
+  };
+
   return (
-    <div className="h-full w-full bg-gray-50 flex items-center justify-center ">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <Card className="w-full max-w-5xl shadow-xl rounded-2xl">
-        <CardHeader className="text-center space-y-3">
-          <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
-            <ShieldCheck className="h-8 w-8 text-blue-600" />
-            MetaMark Registration
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-3xl font-bold flex justify-center gap-2">
+            <ShieldCheck className="text-blue-600" /> MetaMark Registration
           </CardTitle>
-          <CardDescription className="text-gray-600 max-w-2xl mx-auto">
-            MetaMark is a cutting-edge blockchain-based product verification system
-            designed to ensure the authenticity of products and combat counterfeiting.
-            Register to securely verify and track products in real-time using blockchain.
+          <CardDescription>
+            Blockchain-based product verification system
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <Tabs defaultValue="manufacturer" className="w-full">
-            <TabsList className="grid grid-cols-3 mb-8">
-              <TabsTrigger value="manufacturer" className="flex  gap-2">
-                <Factory className="h-4 w-4" /> Manufacturer
-              </TabsTrigger>
-              {/*
-              <TabsTrigger value="retailer" className="flex gap-2">
-                <Store className="h-4 w-4" /> Retailer
-              </TabsTrigger>
-              */}
-              <TabsTrigger value="consumer" className="flex gap-2">
-                <User className="h-4 w-4" /> Consumer
-              </TabsTrigger>
+          <Tabs defaultValue="manufacturer">
+            <TabsList className="grid grid-cols-2 mb-6">
+              <TabsTrigger value="manufacturer"><Factory /> Manufacturer</TabsTrigger>
+              <TabsTrigger value="consumer"><User /> Consumer</TabsTrigger>
             </TabsList>
 
-            {/* Manufacturer */}
+            {/* ================= MANUFACTURER ================= */}
             <TabsContent value="manufacturer">
-              <form className="grid grid-cols-1 md:grid-cols-2 mb-8 gap-6">
-                <div className="">
-                  <Label  className="p-2">Company Name</Label>
-                  <Input placeholder="ABC Manufacturing Pvt Ltd" />
+              <form className="grid grid-cols-2 gap-6">
+                <div>
+                  <Label>Company</Label>
+                  <Input name="company" value={manufactdata.company} onChange={handleManufacturerChange} />
+                  {manErrors.company && <p className="text-red-500 text-sm">{manErrors.company}</p>}
                 </div>
 
                 <div>
-                  <Label className="p-2">Owner Name :</Label>
-                  <Input placeholder="Enter Owner Name:"/>
+                  <Label>Owner</Label>
+                  <Input name="owner" value={manufactdata.owner} onChange={handleManufacturerChange} />
+                  {manErrors.owner && <p className="text-red-500 text-sm">{manErrors.owner}</p>}
                 </div>
-                {/*
+
                 <div>
                   <Label>Email</Label>
-                  <Input type="email" placeholder="company@email.com" />
+                  <Input name="email" value={manufactdata.email} onChange={handleManufacturerChange} />
+                  {manErrors.email && <p className="text-red-500 text-sm">{manErrors.email}</p>}
                 </div>
-                */} 
+
                 <div>
-                  <Label className="p-2">Wallet Address</Label>
-                  <Input placeholder="0x..." />
+                  <Label>Wallet</Label>
+                  <Input value={address} disabled />
                 </div>
-                {/*
-                <div>
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="••••••••" />
+
+                <div className="col-span-2 flex items-center gap-2">
+                  <Checkbox checked={manterms} onCheckedChange={(v) => setManterms(v === true)} />
+                  <Label>Accept terms</Label>
                 </div>
-                */}
-                <div className="md:col-span-2">
-                  <Button className="w-full text-white">Register as Manufacturer</Button>
-                </div>
+                {manErrors.terms && <p className="text-red-500 text-sm col-span-2">{manErrors.terms}</p>}
+
+                <Button className="col-span-2" disabled={!manterms} onClick={registerManufacturer}>
+                  Register as Manufacturer
+                </Button>
               </form>
             </TabsContent>
 
-            {/* Retailer */}
-            {/*
-            <TabsContent value="retailer">
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label>Store Name</Label>
-                  <Input placeholder="Retail Store Name" />
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input type="email" placeholder="store@email.com" />
-                </div>
-                <div>
-                  <Label>Wallet Address</Label>
-                  <Input placeholder="0x..." />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="••••••••" />
-                </div>
-                <div className="md:col-span-2">
-                  <Button className="w-full">Register as Retailer</Button>
-                </div>
-              </form>
-            </TabsContent>
-*/}
-            {/* Consumer */}
+            {/* ================= CONSUMER ================= */}
             <TabsContent value="consumer">
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form className="grid grid-cols-2 gap-6">
                 <div>
-                  <Label className="p-4">Username:</Label>
-                  <Input placeholder="johndoe" />
+                  <Label>Username</Label>
+                  <Input name="username" value={customdata.username} onChange={handleCustomerChange} />
+                  {custErrors.username && <p className="text-red-500 text-sm">{custErrors.username}</p>}
                 </div>
-{/*                <div>
-                 <Label>Email</Label>
-                  <Input type="email" placeholder="user@email.com" />
-                </div>
-            */}
 
                 <div>
-                  <Label className="p-4">Wallet Address</Label>
-                  <Input placeholder="0x..." />
+                  <Label>Account Type</Label>
+                  <Select
+                    value={customdata.accType}
+                    onValueChange={(v) => setCustomdata((p) => ({ ...p, accType: v }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Individual</SelectItem>
+                      <SelectItem value="1">Organization</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {custErrors.accType && <p className="text-red-500 text-sm">{custErrors.accType}</p>}
                 </div>
-                {/*
+
                 <div>
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="••••••••" />
+                  <Label>Contact</Label>
+                  <Input name="contact" value={customdata.contact} onChange={handleCustomerChange} />
+                  {custErrors.contact && <p className="text-red-500 text-sm">{custErrors.contact}</p>}
                 </div>
-                */}
-                <div className="md:col-span-2">
-                  <Button className="w-full">Register as Consumer</Button>
+
+                <div>
+                  <Label>Wallet</Label>
+                  <Input value={address} disabled />
                 </div>
+
+                <div className="col-span-2 flex items-center gap-2">
+                  <Checkbox checked={custermstate} onCheckedChange={(v) => setCustermstate(v === true)} />
+                  <Label>Accept terms</Label>
+                </div>
+                {custErrors.terms && <p className="text-red-500 text-sm col-span-2">{custErrors.terms}</p>}
+
+                <Button className="col-span-2 text-white" disabled={!custermstate} onClick={registerCustomer}>
+                  Register as Consumer
+                </Button>
               </form>
             </TabsContent>
           </Tabs>

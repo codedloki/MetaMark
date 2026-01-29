@@ -10,10 +10,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { defineChain } from "@reown/appkit/networks";
 
 // ✅ Define Ganache as a wagmi-compatible chain
-const ganacheNetwork = defineChain({
-  id: 1337, // or 5777 depending on Ganache setup
-  name: "Ganache Localhost",
-  network: "ganache",
+const hardhatNetwork = defineChain({
+  id: 31337, // 👈 Hardhat default chainId
+  name: "Hardhat Localhost",
+  network: "hardhat",
   nativeCurrency: {
     decimals: 18,
     name: "Ethereum",
@@ -21,10 +21,10 @@ const ganacheNetwork = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ["http://127.0.0.1:7545"],
+      http: ["http://127.0.0.1:8545"],
     },
     public: {
-      http: ["http://127.0.0.1:7545"],
+      http: ["http://127.0.0.1:8545"],
     },
   },
 });
@@ -35,10 +35,10 @@ const queryClient = new QueryClient();
 const config = getDefaultConfig({
   appName: "MetaMark",
   projectId: "9f1273f2687d93fc7c55a5907b665018", // required for WalletConnect
-  chains: [ganacheNetwork, mainnet, polygon,sepolia ],
+  chains: [hardhatNetwork, mainnet, polygon,sepolia ],
   transports: {
     
-    [ganacheNetwork.id]: http("http://127.0.0.1:7545"),
+    [hardhatNetwork.id]: http("http://127.0.0.1:8545"),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [sepolia.id]: http(),
@@ -52,7 +52,7 @@ export function WalletProvider({ children }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme()}
-          chains={[ganacheNetwork, mainnet, polygon, sepolia]} // ✅ Add here too
+          chains={[hardhatNetwork, mainnet, polygon, sepolia]} // ✅ Add here too
         >
           {children}
         </RainbowKitProvider>
