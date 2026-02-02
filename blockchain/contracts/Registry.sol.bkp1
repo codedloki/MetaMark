@@ -1,0 +1,191 @@
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Registry {
+    /*//////////////////////////////////////////////////////////////
+                                CONSTANTS
+    //////////////////////////////////////////////////////////////*/
+    uint256 public immutable STAKE_AMOUNT;
+
+    /*//////////////////////////////////////////////////////////////
+                                ENUMS
+    //////////////////////////////////////////////////////////////*/
+    enum Role {
+        NONE,
+        MANUFACTURER,
+        CUSTOMER
+    }
+
+    enum AccountType {
+        INDIVIDUAL,
+        ORGANIZATION
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                STRUCTS
+    //////////////////////////////////////////////////////////////*/
+    struct Manufacturer {
+        string name;
+        string companyName;
+        uint256 stake;
+        bytes32 mancidHash; // IPFS CID hash (optimized)
+        bool verified;
+    }
+
+    struct Customer {
+        string nickname;
+        bytes32 profileCIDHash; // IPFS CID hash
+        AccountType accType;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                STORAGE
+    //////////////////////////////////////////////////////////////*/
+    mapping(address => Role) private roles;
+    mapping(address => Manufacturer) private manufacturers;
+    mapping(address => Customer) private customers;
+
+    // uniqueness via hashes (NOT strings)
+    mapping(bytes32 => bool) private usedCompanyHash;
+    mapping(bytes32 => bool) private usedUsernameHash;
+
+    /*//////////////////////////////////////////////////////////////
+                                EVENTS
+    //////////////////////////////////////////////////////////////*/
+    event ManufacturerRegistered(
+        address indexed wallet,
+        bytes32 indexed companyHash,
+        uint256 stake
+    );
+
+    event CustomerRegistered(
+        address indexed wallet,
+        bytes32 indexed usernameHash
+    );
+
+    /*//////////////////////////////////////////////////////////////
+                                CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
+    constructor() {
+        STAKE_AMOUNT = 0.01 ether;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                MODIFIERS
+    //////////////////////////////////////////////////////////////*/
+    modifier notRegistered() {
+        require(roles[msg.sender] == Role.NONE, "Already registered");
+        _;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        MANUFACTURER REGISTRATION
+    //////////////////////////////////////////////////////////////*/
+    function registerManufacturer(
+        string calldata name,
+        string calldata companyName,
+        string calldata mancid
+    ) external payable notRegistered {
+        require(msg.value >= STAKE_AMOUNT, "Insufficient stake");
+
+        bytes32 companyHash = keccak256(
+            abi.encodePacked(_toLower(companyName))
+        );
+        require(!usedCompanyHash[companyHash], "Company already exists");
+
+        roles[msg.sender] = Role.MANUFACTURER;
+        usedCompanyHash[companyHash] = true;
+
+        manufacturers[msg.sender] = Manufacturer({
+            name: name,
+            companyName: companyName,
+            stake: msg.value,
+            mancidHash: keccak256(bytes(mancid)),
+            verified: true
+        });
+
+        emit ManufacturerRegistered(msg.sender, companyHash, msg.value);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        CUSTOMER REGISTRATION
+    //////////////////////////////////////////////////////////////*/
+    function registerCustomer(
+        string calldata nickname,
+        AccountType accType,
+        string calldata profileCID
+    ) external notRegistered {
+        bytes32 usernameHash = keccak256(
+            abi.encodePacked(_toLower(nickname))
+        );
+        require(!usedUsernameHash[usernameHash], "Username exists");
+
+        roles[msg.sender] = Role.CUSTOMER;
+        usedUsernameHash[usernameHash] = true;
+
+        customers[msg.sender] = Customer({
+            nickname: nickname,
+            profileCIDHash: keccak256(bytes(profileCID)),
+            accType: accType
+        });
+
+        emit CustomerRegistered(msg.sender, usernameHash);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            VIEW FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    function getRole() external view returns (Role) {
+        return roles[msg.sender];
+    }
+
+    function getManufacturer()
+        external
+        view
+        returns (
+            string memory name,
+            string memory companyName,
+            uint256 stake,
+            bool verified
+        )
+    {
+        Manufacturer storage m = manufacturers[msg.sender];
+        return (m.name, m.companyName, m.stake, m.verified);
+    }
+
+    function getCustomer()
+        external
+        view
+        returns (
+            string memory nickname,
+            AccountType accType
+        )
+    {
+        Customer storage c = customers[msg.sender];
+        return (c.nickname, c.accType);
+    }
+
+    function isManufacturer(address user) external view returns (bool) {
+        return roles[user] == Role.MANUFACTURER;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            INTERNAL UTILS
+    //////////////////////////////////////////////////////////////*/
+    function _toLower(string memory str)
+        internal
+        pure
+        returns (string memory)
+    {
+        bytes memory bStr = bytes(str);
+        for (uint256 i; i < bStr.length; ++i) {
+            uint8 c = uint8(bStr[i]);
+            if (c >= 65 && c <= 90) {
+                bStr[i] = bytes1(c + 32);
+            }
+        }
+        return string(bStr);
+    }
+}

@@ -1,138 +1,231 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useUser } from "../../../../providers/UsersProvider";
+import { MerkleTree } from "merkletreejs";
+import { ethers, keccak256, toUtf8Bytes } from "ethers";
+import jsPDF from "jspdf";
+import { useConnect } from "../../../../providers/ConnectProvider";
+import QRCode from "qrcode";
+import { FileUp, Package, ShieldCheck, Download, Loader2 } from "lucide-react";
+
+// ✅ SECRET SALT: QR ko secure rakhne ke liye (Expose mat karna)
+const SECRET_SALT = import.meta.env.VITE_QR_SALT || "METAMARK_PRIVATE_KEY_2026";
 
 function AddBatch() {
+  const { product } = useUser();
+  const { walletAddress } = useConnect();
+
   const [batchId, setBatchId] = useState("");
+  const [productId, setProductId] = useState("");
+  const [koa, setkoa] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
+  const [csvData, setCsvData] = useState([]);
+  const [merkleRoot, setMerkleRoot] = useState("");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // ======================== LOAD PRODUCTS ========================
+  useEffect(() => {
+    if (!product || !walletAddress) return;
+    const loadProducts = async () => {
+      try {
+        const productIds = await product.getProductsByManufacturer(walletAddress);
+        const temp = [];
+        for (const id of productIds) {
+          const prod = await product.getProduct(id);
+          const res = await axios.get(`https://gateway.pinata.cloud/ipfs/${prod.details}`);
+          temp.push({ productId: id, ...res.data });
+        }
+        setkoa(temp);
+      } catch (err) { console.error("Load Error:", err); }
+    };
+    loadProducts();
+  }, [product, walletAddress]);
+
+  // ======================== SECURE MERKLE LOGIC ========================
+  const processBatch = async (text) => {
+    try {
+      // ✅ FIX: split(/\r?\n/) handles Windows/Linux line endings properly
+      const lines = text.trim().split(/\r?\n/).filter(line => line.trim() !== "");
+      if (lines.length <= 1) throw new Error("CSV is empty");
+
+      const parsedRows = lines.slice(1).map(line => {
+        const [serial_no, mfg_date, expiry_date] = line.split(",").map(v => v.trim());
+        return { serial_no, mfg_date, expiry_date };
+      });
+
+      // ✅ SALTED HASHING: Serial Number ko hide kiya
+      const leaves = parsedRows.map(row => 
+        keccak256(toUtf8Bytes(row.serial_no + SECRET_SALT))
+      );
+
+      const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
+      const root = tree.getHexRoot();
+      setMerkleRoot(root);
+
+      const units = parsedRows.map((row, i) => ({
+        ...row,
+        leaf: leaves[i],
+        proof: tree.getHexProof(leaves[i])
+      }));
+
+      setCsvData(units);
+      setSuccess(`Manifest Loaded: ${units.length} unique units sealed! 🔐`);
+      setError("");
+    } catch (err) {
+      setError("Invalid CSV: Ensure format is Serial,Mfg,Exp");
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setError("");
-    setSuccess("");
-
     if (!file) return;
-
-    if (!file.name.endsWith(".csv")) {
-      setError("Only CSV files are allowed");
-      setCsvFile(null);
-      return;
-    }
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      validateCSV(text);
-    };
-
+    reader.onload = (e) => processBatch(e.target.result);
     reader.readAsText(file);
     setCsvFile(file);
   };
 
-  const validateCSV = (text) => {
-    const lines = text.trim().split("\n");
-    const headers = lines[0]
-      .split(",")
-      .map((h) => h.trim().toLowerCase());
-
-    const requiredHeaders = ["mfg_date", "expiry_date", "serial_no"];
-
-    const isValid = requiredHeaders.every((h) =>
-      headers.includes(h)
-    );
-
-    if (!isValid) {
-      setError(
-        "CSV must contain columns: mfg_date, expiry_date, serial_no"
-      );
-      setCsvFile(null);
-    } else {
-      setSuccess("CSV file validated successfully ✔");
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!batchId || !productId || csvData.length === 0) return setError("Please fill all fields");
 
-    if (!batchId || !csvFile) {
-      setError("All fields are required");
-      return;
+    setLoading(true);
+    try {
+      const blob = new Blob([JSON.stringify({ productId, batchId, units: csvData })], { type: "application/json" });
+      const formData = new FormData();
+      formData.append("file", blob, "security_manifest.json");
+
+      const ipfsRes = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_PINATA_JWT_SECRET}` }
+      });
+
+      console.log(ipfsRes)
+
+      const tx = await product.addBatch(productId, BigInt(batchId), ipfsRes.data.IpfsHash, merkleRoot);
+      await tx.wait();
+      
+      setSuccess("Batch Registered on Blockchain! Labels ready for download.");
+      // ✅ FIX: Don't clear csvData here so PDF can still be generated
+    } catch (err) { 
+      setError(`Blockchain Error: ${err.reason || "Check duplicate ID"}`); 
+    } finally { 
+      setLoading(false); 
     }
-
-    alert("Batch Created Successfully!");
-    console.log({ batchId, csvFile });
-
-    setBatchId("");
-    setCsvFile(null);
-    setSuccess("");
   };
 
-  const isDisabled = !batchId || !csvFile;
+  // ======================== FIXED PDF GENERATION ========================
+  const downloadPDF = async () => {
+    if (csvData.length === 0) return;
+    
+    const pdf = new jsPDF();
+    const dataToPrint = [...csvData]; // Local copy for loop safety
+
+    for (let i = 0; i < dataToPrint.length; i++) {
+      const item = dataToPrint[i];
+      
+      // ✅ ZERO EXPOSURE: QR holds only the leaf hash
+      const qrPayload = JSON.stringify({ p: productId, b: batchId, l: item.leaf });
+      const qrDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1 });
+      
+      const x = (i % 2) * 105 + 10;
+      const y = Math.floor((i % 6) / 2) * 90 + 20;
+      if (i > 0 && i % 6 === 0) pdf.addPage();
+
+      pdf.setDrawColor(220);
+      pdf.roundedRect(x, y, 95, 80, 5, 5, 'D');
+      pdf.addImage(qrDataUrl, "PNG", x + 22, y + 5, 50, 50);
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(40);
+      pdf.text(`PID: ${productId.substring(0, 18)}...`, x + 5, y + 60);
+      pdf.text(`BATCH ID: ${batchId}`, x + 5, y + 66);
+      pdf.text(`MFG: ${item.mfg_date} | EXP: ${item.expiry_date}`, x + 5, y + 72);
+      
+      // ✅ MASKED SERIAL: For human reference only
+      const maskedSerial = item.serial_no ? item.serial_no.replace(/.(?=.{4})/g, '*') : "N/A";
+      pdf.text(`SERIAL: ${maskedSerial}`, x + 5, y + 78);
+    }
+    pdf.save(`Secure_Labels_Batch_${batchId}.pdf`);
+  };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 shadow-lg">
+    <div className="h-screen w-full bg-[#f8fafc] overflow-y-auto scrollbar-hide flex items-center justify-center p-6 text-black">
+      <div className="w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-10 relative">
         
-        <h2 className="text-center text-xl font-semibold text-slate-900">
-          Create Batch
-        </h2>
-        <p className="mt-1 text-center text-sm text-slate-500">
-          Upload batch details using CSV file
-        </p>
+        <div className="mb-10 text-center">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-600 text-white shadow-xl mb-4 transition-transform hover:scale-110">
+            <ShieldCheck size={32} />
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">Add Batch</h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">
+            Secure Cryptographic Unit Tracking
+          </p>
+        </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-6 flex flex-col gap-4"
-        >
-          {/* Batch ID */}
-          <input
-            type="text"
-            placeholder="Batch ID"
-            value={batchId}
-            onChange={(e) => setBatchId(e.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm
-                       text-slate-900 outline-none transition
-                       focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-500 uppercase ml-1">Product</label>
+              <select 
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:ring-2 ring-blue-500"
+                value={productId} 
+                onChange={(e) => setProductId(e.target.value)}
+              >
+                <option value="">Select Product</option>
+                {koa.map(p => <option key={p.productId} value={p.productId}>{p.productName}</option>)}
+              </select>
+            </div>
 
-          {/* CSV Upload */}
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileChange}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm
-                       text-slate-900 file:mr-3 file:rounded-md file:border-0
-                       file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm
-                       file:font-medium file:text-blue-600 hover:file:bg-blue-100"
-          />
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-500 uppercase ml-1">Batch Number</label>
+              <input 
+                type="number" 
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none"
+                placeholder="Ex: 5001"
+                value={batchId} 
+                onChange={(e) => setBatchId(e.target.value)} 
+              />
+            </div>
+          </div>
 
-          {/* Error */}
-          {error && (
-            <p className="text-center text-sm text-red-500">
-              {error}
-            </p>
-          )}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-500 uppercase ml-1">Inventory CSV</label>
+            <div className="relative group">
+              <input type="file" accept=".csv" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+              <div className="border-2 border-dashed border-slate-200 p-10 rounded-[2rem] text-center group-hover:border-blue-400 group-hover:bg-blue-50 transition-all">
+                <FileUp className="mx-auto text-slate-300 mb-2" size={32} />
+                <p className="text-slate-500 text-sm font-bold">{csvFile ? csvFile.name : "Drop CSV Here"}</p>
+              </div>
+            </div>
+          </div>
 
-          {/* Success */}
-          {success && (
-            <p className="text-center text-sm text-green-600">
-              {success}
-            </p>
-          )}
+          {error && <div className="p-4 rounded-2xl bg-red-50 text-red-600 text-xs font-bold border border-red-100">{error}</div>}
+          {success && <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100">{success}</div>}
 
-          <button
-            type="submit"
-            disabled={isDisabled}
-            className={`mt-2 rounded-md px-4 py-3 text-sm font-medium text-white transition
-              ${
-                isDisabled
-                  ? "cursor-not-allowed bg-blue-500"
-                  : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
-              }`}
+          <button 
+            type="submit" 
+            disabled={loading || !merkleRoot} 
+            className="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] shadow-xl flex items-center justify-center gap-3 disabled:bg-slate-300 uppercase tracking-tighter active:scale-95 transition-transform"
           >
-            Create Batch
+            {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20}/>}
+            {loading ? "Registering..." : "Register Batch to Blockchain"}
           </button>
         </form>
+
+        {csvData.length > 0 && (
+          <button 
+            onClick={downloadPDF} 
+            className="w-full mt-4 bg-blue-50 text-blue-700 font-black py-5 rounded-[2rem] border-2 border-dashed border-blue-200 hover:bg-blue-100 transition-all uppercase tracking-tighter"
+          >
+            <Download size={20} /> Download {csvData.length} Secured Labels
+          </button>
+        )}
+        
+        {/* Bottom Spacer for Mobile Scroll */}
+        <div className="h-10 w-full" />
       </div>
     </div>
   );

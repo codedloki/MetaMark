@@ -4,6 +4,7 @@ import { Button }  from '../../../../components/ui/button.tsx'
 import { useUser } from "../../../providers/UsersProvider.jsx"
 import { useConnect } from "../../../providers/ConnectProvider.jsx"
 import  {useNavigate} from 'react-router-dom'
+import WalletIcon  from '../../../../components/ui/wallet-icon.tsx'
 export default function ConnectedW  () {
   const { walletAddress, isConnected, disconnectWallet } = useConnect()
   const { provider,registry,role } = useUser()
@@ -25,7 +26,7 @@ export default function ConnectedW  () {
   return (
   <div className="w-full items-center text-white bg-blue-60">
     <div className="flex w-full bg-[#1A1A1A] items-center gap-2 p-4 rounded-2xl">
-      <Wallet className="text-white" />
+      {/* <WalletIcon className="text-white text-sm" /> */}
       {/* <span className="text-white">{role}</span> */}
 
       {

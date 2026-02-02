@@ -8,6 +8,9 @@ plugins: [react(), tailwindcss()],
 
 server:{
     allowedHosts:true,
+},
+optimizeDeps:{
+    include: ['@metamask/sdk'],
 }
 // resolve: {
 //     alias: {

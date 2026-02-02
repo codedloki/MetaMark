@@ -14,8 +14,10 @@ import Navbar from './parts/defaults/Navbar.jsx'
 import {useConnect} from './parts/providers/ConnectProvider.jsx'
 import CustRoute from './routes/CustRoutes.jsx'
 import ManufactRoutes from './routes/ManufactRoutes.jsx'
-function App() {
+import NotFoundTV from './parts/defaults/NotFoundTV.jsx'
 
+function App() {
+const [open, setOpen] = useState(false);
   const [mobdrawopen,setmobdrawopen] = useState(false)
     const { walletAddress, isConnected, connectwallet } = useConnect();
 
@@ -38,17 +40,15 @@ function App() {
     
       <div className="w-full h-screen  flex-1 bg-white">
             <div className="w-full block md:hidden">
-                    <Navbar onMenuClick={()=>{setmobdrawopen(true)}}/>
-                    <MobDrawer
-                    open={mobdrawopen}
-                    onopenchange={setmobdrawopen}
-                    />
+                    <Navbar onMenuClick={()=>{setOpen(true)}}/>
+                   <MobDrawer open={open} onOpenChange={setOpen} />
             </div>
-        <div className="ml-10 md:p-6   ">
+        <div className="md:ml-10 md:p-6   ">
          <General/>
          <Auth/>
          <CustRoute/>
               <ManufactRoutes/>
+          
                  </div>
         
       </div>

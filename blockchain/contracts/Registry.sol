@@ -1,73 +1,77 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract Registry {
-    /*//////////////////////////////////////////////////////////////
-                                CONSTANTS
-    //////////////////////////////////////////////////////////////*/
-    uint256 public immutable STAKE_AMOUNT;
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// ✅ Step 1: Pausable library import karo
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
+contract Registry is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+    
     /*//////////////////////////////////////////////////////////////
-                                ENUMS
+                                STORAGE
     //////////////////////////////////////////////////////////////*/
-    enum Role {
-        NONE,
-        MANUFACTURER,
-        CUSTOMER
-    }
+    uint256 public STAKE_AMOUNT;
+    address public productsContract;
 
-    enum AccountType {
-        INDIVIDUAL,
-        ORGANIZATION
-    }
+    enum Role { NONE, MANUFACTURER, CUSTOMER }
+    enum AccountType { INDIVIDUAL, ORGANIZATION }
 
-    /*//////////////////////////////////////////////////////////////
-                                STRUCTS
-    //////////////////////////////////////////////////////////////*/
     struct Manufacturer {
         string name;
         string companyName;
         uint256 stake;
-        bytes32 mancidHash; // IPFS CID hash (optimized)
+        bytes32 mancidHash;
         bool verified;
     }
 
     struct Customer {
         string nickname;
-        bytes32 profileCIDHash; // IPFS CID hash
+        bytes32 profileCIDHash;
         AccountType accType;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                                STORAGE
-    //////////////////////////////////////////////////////////////*/
     mapping(address => Role) private roles;
     mapping(address => Manufacturer) private manufacturers;
     mapping(address => Customer) private customers;
-
-    // uniqueness via hashes (NOT strings)
     mapping(bytes32 => bool) private usedCompanyHash;
     mapping(bytes32 => bool) private usedUsernameHash;
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
-    event ManufacturerRegistered(
-        address indexed wallet,
-        bytes32 indexed companyHash,
-        uint256 stake
-    );
+    event ManufacturerRegistered(address indexed wallet, bytes32 indexed companyHash, uint256 stake);
+    event CustomerRegistered(address indexed wallet, bytes32 indexed usernameHash);
+    event ProductsContractUpdated(address indexed oldAddress, address indexed newAddress);
 
-    event CustomerRegistered(
-        address indexed wallet,
-        bytes32 indexed usernameHash
-    );
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+        __UUPSUpgradeable_init();
+        __Pausable_init(); // ✅ Step 2: Pause logic initialize karo
+        
+        STAKE_AMOUNT = 0.01 ether;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /*//////////////////////////////////////////////////////////////
-                                CONSTRUCTOR
+                            CIRCUIT BREAKER (ADMIN)
     //////////////////////////////////////////////////////////////*/
-    constructor() {
-        STAKE_AMOUNT = 10 ether;
+    
+    // ✅ Emergency ke waqt functions rokne ke liye
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    // ✅ Sab kuch theek hone par wapas shuru karne ke liye
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -78,20 +82,34 @@ contract Registry {
         _;
     }
 
+    modifier onlyProducts() {
+        require(msg.sender == productsContract, "Caller is not the products contract");
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
-                        MANUFACTURER REGISTRATION
+                            ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+    function setProductsContract(address _productsAddress) external onlyOwner {
+        require(_productsAddress != address(0), "Invalid address");
+        emit ProductsContractUpdated(productsContract, _productsAddress);
+        productsContract = _productsAddress;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        REGISTRATION (PAUSABLE)
+    //////////////////////////////////////////////////////////////*/
+    
+    // ✅ Step 3: "whenNotPaused" modifier add karo functions par
     function registerManufacturer(
         string calldata name,
         string calldata companyName,
         string calldata mancid
-    ) external payable notRegistered {
+    ) external payable whenNotPaused notRegistered {
         require(msg.value >= STAKE_AMOUNT, "Insufficient stake");
 
-        bytes32 companyHash = keccak256(
-            abi.encodePacked(_toLower(companyName))
-        );
-        require(!usedCompanyHash[companyHash], "Company already exists");
+        bytes32 companyHash = keccak256(abi.encodePacked(companyName));
+        require(!usedCompanyHash[companyHash], "Company exists");
 
         roles[msg.sender] = Role.MANUFACTURER;
         usedCompanyHash[companyHash] = true;
@@ -107,17 +125,12 @@ contract Registry {
         emit ManufacturerRegistered(msg.sender, companyHash, msg.value);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        CUSTOMER REGISTRATION
-    //////////////////////////////////////////////////////////////*/
     function registerCustomer(
         string calldata nickname,
         AccountType accType,
         string calldata profileCID
-    ) external notRegistered {
-        bytes32 usernameHash = keccak256(
-            abi.encodePacked(_toLower(nickname))
-        );
+    ) external whenNotPaused notRegistered {
+        bytes32 usernameHash = keccak256(abi.encodePacked(nickname));
         require(!usedUsernameHash[usernameHash], "Username exists");
 
         roles[msg.sender] = Role.CUSTOMER;
@@ -133,36 +146,19 @@ contract Registry {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            VIEW FUNCTIONS
+                                VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    function getRole() external view returns (Role) {
-        return roles[msg.sender];
+    function getRole(address user) external view returns (Role) {
+        return roles[user];
     }
 
-    function getManufacturer()
+    function getManufacturer(address user)
         external
         view
-        returns (
-            string memory name,
-            string memory companyName,
-            uint256 stake,
-            bool verified
-        )
+        returns (string memory name, string memory companyName, uint256 stake, bool verified)
     {
-        Manufacturer storage m = manufacturers[msg.sender];
+        Manufacturer storage m = manufacturers[user];
         return (m.name, m.companyName, m.stake, m.verified);
-    }
-
-    function getCustomer()
-        external
-        view
-        returns (
-            string memory nickname,
-            AccountType accType
-        )
-    {
-        Customer storage c = customers[msg.sender];
-        return (c.nickname, c.accType);
     }
 
     function isManufacturer(address user) external view returns (bool) {
@@ -170,20 +166,8 @@ contract Registry {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            INTERNAL UTILS
+                                STORAGE GAP
     //////////////////////////////////////////////////////////////*/
-    function _toLower(string memory str)
-        internal
-        pure
-        returns (string memory)
-    {
-        bytes memory bStr = bytes(str);
-        for (uint256 i; i < bStr.length; ++i) {
-            uint8 c = uint8(bStr[i]);
-            if (c >= 65 && c <= 90) {
-                bStr[i] = bytes1(c + 32);
-            }
-        }
-        return string(bStr);
-    }
+    // ✅ Gap adjustment (Pausable ne kuch slots liye hain)
+    uint256[47] private __gap; 
 }

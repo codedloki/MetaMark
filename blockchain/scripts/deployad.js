@@ -1,25 +1,31 @@
-const hre = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
-
+  const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with:", deployer.address);
 
-  const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log("Balance:", hre.ethers.formatEther(balance), "ETH");
+  // 1. Deploy Registry Proxy
+  const Registry = await ethers.getContractFactory("Registry");
+  const registryProxy = await upgrades.deployProxy(Registry, [], {
+    initializer: "initialize",
+    kind: "uups",
+  });
+  await registryProxy.waitForDeployment();
+  const registryAddress = await registryProxy.getAddress();
+  console.log("Registry Proxy deployed to:", registryAddress);
 
-  const Registry = await hre.ethers.getContractFactory("Registry");
-  const registry = await Registry.deploy();
-  await registry.waitForDeployment();
+  // 2. Deploy Products Proxy
+  const Products = await ethers.getContractFactory("Products");
+  // initialize mein Registry ka address bhej rahe hain
+  const productsProxy = await upgrades.deployProxy(Products, [registryAddress], {
+    initializer: "initialize",
+    kind: "uups",
+  });
+  await productsProxy.waitForDeployment();
+  const productsAddress = await productsProxy.getAddress();
+  console.log("Products Proxy deployed to:", productsAddress);
 
-  console.log("Registry deployed to:", await registry.getAddress());
-
-  const Products = await hre.ethers.getContractFactory("Products");
-  const products = await Products.deploy(await registry.getAddress());
-  await products.waitForDeployment();
-
-  console.log("Products deployed to:", await products.getAddress());
-  console.log("✅ Deployment complete");
+  console.log("✅ All Proxies Deployed!");
 }
 
 main().catch((error) => {

@@ -1,1 +1,2 @@
-productid,batchid,mfg_date,exp_date,
+batchid,serial_no,mfg_date,exp_date,qty,is_active
+

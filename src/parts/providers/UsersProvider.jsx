@@ -1,65 +1,70 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { BrowserProvider, Contract } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
 import { useConnect } from "./ConnectProvider.jsx";
 import RegistryABI from "../../abi/Registry.json";
-import Productabu from '../../abi/Product.json'
+import ProductABI from '../../abi/Product.json';
 
 const UserContext = createContext(null);
 
 export default function UserProvider({ children }) {
-  const { isConnected,walletAddress } = useConnect();
-
+  const { isConnected, walletAddress } = useConnect();
+  const [signer, setSigner] = useState(null);
   const [provider, setProvider] = useState(null);
   const [registry, setRegistry] = useState(null);
-  const [product,setproduct] = useState(null)
+  const [product, setProduct] = useState(null);
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-    if (!isConnected || !window.ethereum) return;
-
+    // Mobile Check: Agar window.ethereum nahi hai toh 
+    // thoda wait karke dobara check karna chahiye
     const init = async () => {
+      console.log("Checking Connection States:", { isConnected, walletAddress, hasEthereum: !!window.ethereum });
+
+      if (!isConnected || !walletAddress || !window.ethereum) {
+        console.log("Waiting for wallet connection...");
+        return;
+      }
+
       try {
-        const provider = new BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        console.log("Registry address:",import.meta.env.VITE_REGISTRY_ADDRESS)
-        const registry = new Contract(
+        const browserProvider = new BrowserProvider(window.ethereum);
+        const userSigner = await browserProvider.getSigner();
+        
+        // Contracts Setup
+        const registryInstance = new Contract(
           import.meta.env.VITE_REGISTRY_ADDRESS,
           RegistryABI,
-          signer
+          userSigner
         );
 
-        const producti = new Contract(
+        const productInstance = new Contract(
           import.meta.env.VITE_PRODUCT_ADDRESS,
-          Productabu,
-          signer
+          ProductABI,
+          userSigner
+        );
 
-        )
+        // ✅ Immediate State Update (Registration page ko yehi chahiye)
+        setProvider(browserProvider);
+        setSigner(userSigner);
+        setRegistry(registryInstance);
+        setProduct(productInstance);
 
-        setproduct(producti)
-        const role = await registry.getRole();
-        
+        console.log("Contracts Initialized. Fetching role in background...");
 
-        setProvider(provider);
-        setRegistry(registry);
-        setRole(Number(role)); // enum → number
-        console.log(role)
+        // Role fetch ko 'await' mat karo, background mein hone do
+        registryInstance.getRole(walletAddress)
+          .then(r => setRole(Number(r)))
+          .catch(e => console.error("Role fetch error:", e));
+
       } catch (err) {
-        console.error("UserProvider error:", err);
+        console.error("UserProvider init error:", err);
       }
     };
 
     init();
-  }, [isConnected]);
+  }, [isConnected, walletAddress]);
 
   return (
-    <UserContext.Provider
-      value={{
-        provider,
-        registry,
-        product,
-        role,
-      }}
-    >
+    <UserContext.Provider value={{ provider, registry, product, role, signer }}>
       {children}
     </UserContext.Provider>
   );
@@ -67,10 +72,6 @@ export default function UserProvider({ children }) {
 
 export const useUser = () => {
   const context = useContext(UserContext);
-
-  if (!context) {
-    throw new Error("useUser must be used inside UserProvider");
-  }
-
+  if (!context) throw new Error("useUser must be used inside UserProvider");
   return context;
 };
