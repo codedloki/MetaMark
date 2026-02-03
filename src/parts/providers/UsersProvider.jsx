@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, ethers } from "ethers"; // ethers added
 import { useConnect } from "./ConnectProvider.jsx";
 import RegistryABI from "../../abi/Registry.json";
 import ProductABI from '../../abi/Product.json';
+import { sign } from "viem/accounts";
 
 const UserContext = createContext(null);
 
@@ -14,46 +15,55 @@ export default function UserProvider({ children }) {
   const [product, setProduct] = useState(null);
   const [role, setRole] = useState(null);
 
+  // ✅ RPC URL from your WalletProvider (Alchemy)
+  const AMOY_RPC = "https://polygon-amoy.g.alchemy.com/v2/HUuUwdt83uUOmUB4v5gA4";
+
   useEffect(() => {
-    // Mobile Check: Agar window.ethereum nahi hai toh 
-    // thoda wait karke dobara check karna chahiye
     const init = async () => {
-      console.log("Checking Connection States:", { isConnected, walletAddress, hasEthereum: !!window.ethereum });
-
-      if (!isConnected || !walletAddress || !window.ethereum) {
-        console.log("Waiting for wallet connection...");
-        return;
-      }
-
       try {
-        const browserProvider = new BrowserProvider(window.ethereum);
-        const userSigner = await browserProvider.getSigner();
-        
-        // Contracts Setup
+        let activeProvider;
+        let activeSigner = null;
+
+        // 🛡️ Logic Change: Wallet check ke saath Fallback support
+        if (window.ethereum && isConnected && walletAddress) {
+          // Desktop/Wallet Browser Flow
+          activeProvider = new BrowserProvider(window.ethereum);
+          activeSigner = await activeProvider.getSigner();
+          console.log("MetaMark: Connected via Wallet");
+        } else {
+          // ✅ Mobile/Consumer Flow: Public RPC Fallback
+          // Isse 'product' hamesha available rahega null nahi hoga
+          activeProvider = new JsonRpcProvider(AMOY_RPC);
+          console.log("MetaMark: Connected via Public RPC (Consumer Mode)");
+        }
+
+        // Contracts Setup (Using Signer if available, else Provider for Read-only)
+        const target = activeSigner || activeProvider;
+
         const registryInstance = new Contract(
           import.meta.env.VITE_REGISTRY_ADDRESS,
           RegistryABI,
-          userSigner
+          activeSigner
+
         );
 
         const productInstance = new Contract(
           import.meta.env.VITE_PRODUCT_ADDRESS,
           ProductABI,
-          userSigner
+          activeSigner
         );
 
-        // ✅ Immediate State Update (Registration page ko yehi chahiye)
-        setProvider(browserProvider);
-        setSigner(userSigner);
+        setProvider(activeProvider);
+        setSigner(activeSigner);
         setRegistry(registryInstance);
         setProduct(productInstance);
 
-        console.log("Contracts Initialized. Fetching role in background...");
-
-        // Role fetch ko 'await' mat karo, background mein hone do
-        registryInstance.getRole(walletAddress)
-          .then(r => setRole(Number(r)))
-          .catch(e => console.error("Role fetch error:", e));
+        // Background Role Fetch (Only if walletAddress exists)
+        if (walletAddress) {
+          registryInstance.getRole(walletAddress)
+            .then(r => setRole(Number(r)))
+            .catch(e => console.error("Role fetch error:", e));
+        }
 
       } catch (err) {
         console.error("UserProvider init error:", err);

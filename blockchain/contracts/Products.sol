@@ -116,44 +116,45 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
         emit BatchAdded(_productId, _batchId, _ipfsHash, _merkleRoot);
     }
 
-    function verifySerial(bytes32 _productId, uint256 _batchId, bytes32 _leaf, bytes32[] calldata _merkleProof) external whenNotPaused productExists(_productId) {
+    /**
+     * @dev UPDATED: verifySerial ab ek 'view' function hai.
+     * Isse mobile consumers bina MATIC/Gas Fee ke verify kar sakte hain.
+     * Double-scan protection Firebase (off-chain) se handle ho rahi hai.
+     */
+    function verifySerial(
+        bytes32 _productId, 
+        uint256 _batchId, 
+        bytes32 _leaf, 
+        bytes32[] calldata _merkleProof
+    ) external view whenNotPaused productExists(_productId) returns (bool) {
         require(batches[_productId][_batchId].exists, "Batch does not exist");
         require(products[_productId].isActive, "Product inactive");
 
-        bytes32 leafHash = keccak256(abi.encodePacked(_leaf));
-        require(!serialIdUsed[leafHash], "Already verified");
-
-        require(MerkleProof.verify(_merkleProof, batches[_productId][_batchId].merkleRoot, _leaf), "Invalid Merkle proof");
-
-        serialIdUsed[leafHash] = true;
-        emit SerialVerified(_productId, _batchId, leafHash, msg.sender);
+        // Merkle Proof Verify karein (Returns true/false)
+        return MerkleProof.verify(_merkleProof, batches[_productId][_batchId].merkleRoot, _leaf);
     }
 
     /*//////////////////////////////////////////////////////////////
                             VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    // 1. Get Product Details
     function getProduct(bytes32 _productId) external view returns (string memory details, address manufacturer, bool isActive) {
         Product storage p = products[_productId];
         require(p.manufacturer != address(0), "Product does not exist");
         return (p.details, p.manufacturer, p.isActive);
     }
 
-    // 2. Get Batch Details
     function getBatch(bytes32 _productId, uint256 _batchId) external view returns (Batch memory) {
         require(batches[_productId][_batchId].exists, "Batch not found");
         return batches[_productId][_batchId];
     }
 
-    // 3. Get All Product IDs of a Manufacturer
     function getProductsByManufacturer(address _manufacturer) external view returns (bytes32[] memory) { 
-        return manufacturerProducts[_manufacturer]; 
+        return manufacturerProducts[_manufacturer];
     }
 
-    // 4. Get All Batch IDs of a Product
     function getProductBatchIds(bytes32 _productId) external view returns (uint256[] memory) { 
-        return productBatchIds[_productId]; 
+        return productBatchIds[_productId];
     }
 
     uint256[47] private __gap;

@@ -43,7 +43,7 @@ const [open, setOpen] = useState(false);
                     <Navbar onMenuClick={()=>{setOpen(true)}}/>
                    <MobDrawer open={open} onOpenChange={setOpen} />
             </div>
-        <div className="md:ml-10 md:p-6   ">
+        <div className="md:ml-10    ">
          <General/>
          <Auth/>
          <CustRoute/>

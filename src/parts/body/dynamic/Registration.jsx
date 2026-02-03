@@ -97,7 +97,7 @@ export default function Register() {
   }
 
   return (
-    <div className="w-full bg-[#f8fafc] flex flex-col items-center p-4 py-6 font-sans">
+    <div className="w-full bg-[#f8fafc] text-black flex flex-col items-center p-4 py-6 font-sans">
       <Card className="w-full max-w-md shadow-2xl rounded-[2.5rem] border-none bg-white">
         <CardHeader className="text-center pb-4 pt-8">
           <div className="mx-auto bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg mb-3">
@@ -115,7 +115,7 @@ export default function Register() {
             </TabsList>
 
             {/* MANUFACTURER */}
-            <TabsContent value="manufacturer" className="space-y-4">
+            <TabsContent value="manufacturer" className="space-y-4 text-black">
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Company Name</Label>
                 <Input name="company" className="h-12 rounded-xl bg-slate-50 border-slate-200" placeholder="e.g. Nike" value={manufactdata.company} onChange={handleManufacturerChange} />
@@ -146,7 +146,7 @@ export default function Register() {
             </TabsContent>
 
             {/* CONSUMER */}
-            <TabsContent value="consumer" className="space-y-4">
+            <TabsContent value="consumer" className="space-y-4 text-black">
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Username</Label>
                 <Input name="username" className="h-12 rounded-xl bg-slate-50 border-slate-200" placeholder="@nickname" value={customdata.username} onChange={handleCustomerChange} />

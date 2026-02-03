@@ -20,6 +20,26 @@
       "address": "0xCd947a6f78Ad1BF2bE7B27628c8Adf716Bc88B2e",
       "txHash": "0xe7b3a0f320cda99d1b02b8800a735b3df279170538211c82646e0f8ae0bd74d6",
       "kind": "uups"
+    },
+    {
+      "address": "0xf8Ef6EAF7102050744DBAe8AeD79cF0f7207aF1d",
+      "txHash": "0x2ed7f8e46495a8da30b1aa383c756eb1319aa83d9e6ab9caa2da525df628e980",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2B3B586C66122a4450F3130873de9e316e9c85dE",
+      "txHash": "0x83af1333f2dbd6eccaf390510474f562d1b26d2238725170ec4af21c22d24d5a",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2c1E6a450a3143097B92f013931ee931D1630f79",
+      "txHash": "0x03d3c9a8f0f240a89583526357e7e386bb76ed40cb805dbb6add98811fb1ee4f",
+      "kind": "uups"
+    },
+    {
+      "address": "0x6cE7807f37806dF83157FC8Adf2AE725B9373021",
+      "txHash": "0xe6034859fdfab2d35423530992492558726895874f38dde078091f3283ee876e",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -1158,6 +1178,287 @@
             "type": "t_array(t_uint256)47_storage",
             "contract": "Products",
             "src": "contracts/Products.sol:155"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)224_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]",
+            "numberOfBytes": "1504"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IRegistry)2719": {
+            "label": "contract IRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_array(t_bytes32)dyn_storage)": {
+            "label": "mapping(address => bytes32[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(bytes32 => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_uint256,t_struct(Batch)2749_storage))": {
+            "label": "mapping(bytes32 => mapping(uint256 => struct Products.Batch))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(Product)2738_storage)": {
+            "label": "mapping(bytes32 => struct Products.Product)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Batch)2749_storage)": {
+            "label": "mapping(uint256 => struct Products.Batch)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Batch)2749_storage": {
+            "label": "struct Products.Batch",
+            "members": [
+              {
+                "label": "productId",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "batchId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "ipfsHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "merkleRoot",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "exists",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_struct(Product)2738_storage": {
+            "label": "struct Products.Product",
+            "members": [
+              {
+                "label": "details",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "manufacturer",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "4bcde7dd79f3662f9062b107193f5c05c217bb21b5f8bddae1cdb1ab8b044651": {
+      "address": "0x3758b332fc40954D53518c52d7280C312F23f16f",
+      "txHash": "0xd51283a6888048d985e3c9a33568ac80d041aa19d13ae88d3e638f6715672390",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "products",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_bytes32,t_struct(Product)2738_storage)",
+            "contract": "Products",
+            "src": "contracts/Products.sol:34"
+          },
+          {
+            "label": "batches",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_struct(Batch)2749_storage))",
+            "contract": "Products",
+            "src": "contracts/Products.sol:35"
+          },
+          {
+            "label": "productBatchIds",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_array(t_uint256)dyn_storage)",
+            "contract": "Products",
+            "src": "contracts/Products.sol:36"
+          },
+          {
+            "label": "serialIdUsed",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "Products",
+            "src": "contracts/Products.sol:37"
+          },
+          {
+            "label": "manufacturerProducts",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_array(t_bytes32)dyn_storage)",
+            "contract": "Products",
+            "src": "contracts/Products.sol:38"
+          },
+          {
+            "label": "ipfsHashUsed",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "Products",
+            "src": "contracts/Products.sol:39"
+          },
+          {
+            "label": "registry",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IRegistry)2719",
+            "contract": "Products",
+            "src": "contracts/Products.sol:41"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_uint256)47_storage",
+            "contract": "Products",
+            "src": "contracts/Products.sol:160"
           }
         ],
         "types": {
