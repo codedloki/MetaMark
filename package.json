@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@metamask/sdk": "^0.34.0",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -29,6 +33,8 @@
     "@reown/appkit-adapter-wagmi": "^1.8.17",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
+    "@xmtp/browser-sdk": "^6.3.0",
+    "@xmtp/xmtp-js": "^13.0.4",
     "axios": "^1.13.4",
     "base32-encode": "^2.0.0",
     "class-variance-authority": "^0.7.1",

@@ -3,11 +3,11 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  const artifact = await hre.artifacts.readArtifact("Registry");
+  const artifact = await hre.artifacts.readArtifact("Products");
 
   // define folder and path
   const abiDir = path.join(__dirname, "../../src/abi/"); // relative to scripts/
-  const abiPath = path.join(abiDir, "Registry.json");
+  const abiPath = path.join(abiDir, "Products.json");
 
   // create folder if missing
   if (!fs.existsSync(abiDir)) {

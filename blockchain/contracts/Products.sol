@@ -18,6 +18,7 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
         string details;
         address manufacturer;
         bool isActive;
+        uint256 timestamp; // Added for registration tracking
     }
 
     struct Batch {
@@ -26,6 +27,8 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
         string ipfsHash;
         bytes32 merkleRoot;
         bool exists;
+        bool isDeactivated;
+        uint256 timestamp; // Added for batch tracking
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -43,8 +46,8 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
-    event ProductRegistered(bytes32 indexed productId, string details, address manufacturer);
-    event BatchAdded(bytes32 indexed productId, uint256 indexed batchId, string ipfsHash, bytes32 merkleRoot);
+    event ProductRegistered(bytes32 indexed productId, string details, address manufacturer, uint256 timestamp);
+    event BatchAdded(bytes32 indexed productId, uint256 indexed batchId, string ipfsHash, bytes32 merkleRoot, uint256 timestamp);
     event SerialVerified(bytes32 indexed productId, uint256 indexed batchId, bytes32 leafHash, address verifier);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -91,11 +94,17 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
         bytes32 productId = keccak256(abi.encodePacked(msg.sender, _details, _nonce, block.timestamp));
         require(products[productId].manufacturer == address(0), "Product exists");
 
-        products[productId] = Product({ details: _details, manufacturer: msg.sender, isActive: true });
+        products[productId] = Product({ 
+            details: _details, 
+            manufacturer: msg.sender, 
+            isActive: true,
+            timestamp: block.timestamp 
+        });
+        
         ipfsHashUsed[detailsHash] = true;
         manufacturerProducts[msg.sender].push(productId);
 
-        emit ProductRegistered(productId, _details, msg.sender);
+        emit ProductRegistered(productId, _details, msg.sender, block.timestamp);
         return productId;
     }
 
@@ -109,18 +118,15 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
             batchId: _batchId,
             ipfsHash: _ipfsHash,
             merkleRoot: _merkleRoot,
-            exists: true
+            exists: true,
+            isDeactivated:false,
+            timestamp: block.timestamp
         });
 
         productBatchIds[_productId].push(_batchId);
-        emit BatchAdded(_productId, _batchId, _ipfsHash, _merkleRoot);
+        emit BatchAdded(_productId, _batchId, _ipfsHash, _merkleRoot, block.timestamp);
     }
 
-    /**
-     * @dev UPDATED: verifySerial ab ek 'view' function hai.
-     * Isse mobile consumers bina MATIC/Gas Fee ke verify kar sakte hain.
-     * Double-scan protection Firebase (off-chain) se handle ho rahi hai.
-     */
     function verifySerial(
         bytes32 _productId, 
         uint256 _batchId, 
@@ -129,8 +135,6 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
     ) external view whenNotPaused productExists(_productId) returns (bool) {
         require(batches[_productId][_batchId].exists, "Batch does not exist");
         require(products[_productId].isActive, "Product inactive");
-
-        // Merkle Proof Verify karein (Returns true/false)
         return MerkleProof.verify(_merkleProof, batches[_productId][_batchId].merkleRoot, _leaf);
     }
 
@@ -138,10 +142,15 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
                             VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getProduct(bytes32 _productId) external view returns (string memory details, address manufacturer, bool isActive) {
+    function getProduct(bytes32 _productId) external view returns (
+        string memory details, 
+        address manufacturer, 
+        bool isActive, 
+        uint256 timestamp
+    ) {
         Product storage p = products[_productId];
         require(p.manufacturer != address(0), "Product does not exist");
-        return (p.details, p.manufacturer, p.isActive);
+        return (p.details, p.manufacturer, p.isActive, p.timestamp);
     }
 
     function getBatch(bytes32 _productId, uint256 _batchId) external view returns (Batch memory) {
@@ -157,5 +166,5 @@ contract Products is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pausabl
         return productBatchIds[_productId];
     }
 
-    uint256[47] private __gap;
+    uint256[46] private __gap; // Reduced by 1 because we added a field to Product struct
 }

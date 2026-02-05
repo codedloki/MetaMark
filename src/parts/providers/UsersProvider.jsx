@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { BrowserProvider, Contract, JsonRpcProvider, ethers } from "ethers"; // ethers added
+import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
 import { useConnect } from "./ConnectProvider.jsx";
 import RegistryABI from "../../abi/Registry.json";
 import ProductABI from '../../abi/Product.json';
-import { sign } from "viem/accounts";
 
 const UserContext = createContext(null);
 
@@ -14,59 +13,55 @@ export default function UserProvider({ children }) {
   const [registry, setRegistry] = useState(null);
   const [product, setProduct] = useState(null);
   const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
 
-  // ✅ RPC URL from your WalletProvider (Alchemy)
-  const AMOY_RPC = "https://polygon-amoy.g.alchemy.com/v2/HUuUwdt83uUOmUB4v5gA4";
+  const AMOY_RPC = "https://rpc-amoy.polygon.technology";
 
   useEffect(() => {
     const init = async () => {
       try {
+        setLoading(true);
         let activeProvider;
         let activeSigner = null;
 
-        // 🛡️ Logic Change: Wallet check ke saath Fallback support
         if (window.ethereum && isConnected && walletAddress) {
-          // Desktop/Wallet Browser Flow
           activeProvider = new BrowserProvider(window.ethereum);
           activeSigner = await activeProvider.getSigner();
-          console.log("MetaMark: Connected via Wallet");
         } else {
-          // ✅ Mobile/Consumer Flow: Public RPC Fallback
-          // Isse 'product' hamesha available rahega null nahi hoga
           activeProvider = new JsonRpcProvider(AMOY_RPC);
-          console.log("MetaMark: Connected via Public RPC (Consumer Mode)");
         }
 
-        // Contracts Setup (Using Signer if available, else Provider for Read-only)
         const target = activeSigner || activeProvider;
 
         const registryInstance = new Contract(
           import.meta.env.VITE_REGISTRY_ADDRESS,
           RegistryABI,
-          activeSigner
-
+          target
         );
 
         const productInstance = new Contract(
           import.meta.env.VITE_PRODUCT_ADDRESS,
           ProductABI,
-          activeSigner
+          target
         );
 
         setProvider(activeProvider);
         setSigner(activeSigner);
         setRegistry(registryInstance);
         setProduct(productInstance);
-
-        // Background Role Fetch (Only if walletAddress exists)
+        console.log(walletAddress)
         if (walletAddress) {
-          registryInstance.getRole(walletAddress)
-            .then(r => setRole(Number(r)))
-            .catch(e => console.error("Role fetch error:", e));
+          const r = await registryInstance.getRole(walletAddress);
+          setRole(Number(r));
+          console.log("Detected r :",r)
+        } else {
+          setRole(0); 
         }
 
       } catch (err) {
         console.error("UserProvider init error:", err);
+      } finally {
+        setLoading(false); // Stop loading when done
       }
     };
 
@@ -74,7 +69,7 @@ export default function UserProvider({ children }) {
   }, [isConnected, walletAddress]);
 
   return (
-    <UserContext.Provider value={{ provider, registry, product, role, signer }}>
+    <UserContext.Provider value={{ provider, registry, product, role, signer, loading }}>
       {children}
     </UserContext.Provider>
   );

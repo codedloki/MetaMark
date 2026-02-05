@@ -10,8 +10,11 @@ server:{
     allowedHosts:true,
 },
 optimizeDeps:{
-    include: ['@metamask/sdk'],
-}
+    include: ['@metamask/sdk',"@xmtp/proto"],
+    exclude: ["@xmtp/wasm-bindings", "@xmtp/browser-sdk"],
+
+},
+global: 'globalThis', // XMTP/Buffer issues ke liye zaroori hai
 // resolve: {
 //     alias: {
 //       "@": path.resolve(__dirname, "./src/"),

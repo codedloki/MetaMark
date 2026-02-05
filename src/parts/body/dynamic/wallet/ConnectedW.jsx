@@ -42,7 +42,12 @@ export default function ConnectedW  () {
             Manufacturer
           </div>
         ) : role === 2 ? (
-          <>Customer</>
+          <div
+          onClick={(e)=>{
+            e.preventDefault()
+            navigate('/c/dashboard')
+          }}
+          >Customer</div>
         ) : (
           <>Invalid</>   
         )

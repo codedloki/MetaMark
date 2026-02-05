@@ -2,7 +2,7 @@ const { ethers, upgrades } = require("hardhat");
 
 async function main() {
   // 1. Apne existing Proxy ka address yahan daal (Jo .env mein hai)
-  const proxyAddress = "0xCd947a6f78Ad1BF2bE7B27628c8Adf716Bc88B2e"; 
+  const proxyAddress = "0x6D5E4278ac5E7E102528424E51844ad8d3d08B46"; 
 
   console.log("Upgrading Products contract at:", proxyAddress);
 

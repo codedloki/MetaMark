@@ -17,7 +17,6 @@ function CreateProd() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Validation Logic
   const isValid =
     formData.productName.trim().length >= 3 &&
     formData.productType &&
@@ -86,11 +85,11 @@ function CreateProd() {
       <div style={styles.card}>
         <div style={styles.header}>
             <div style={styles.iconBox}>
-                <PackagePlus size={24} color="#2563EB" />
+                <PackagePlus size={24} color="#60A5FA" />
             </div>
             <h2 style={styles.title}>Add Product</h2>
             <p style={styles.subtitle}>
-              Register your product assets on the MetaMark Ledger
+              Securely register assets on the blockchain ledger
             </p>
         </div>
 
@@ -116,10 +115,10 @@ function CreateProd() {
               onChange={handleChange}
               style={styles.input}
             >
-              <option value="">Select Type</option>
-              <option value="tablet">Tablet</option>
-              <option value="cream">Cream</option>
-              <option value="liquid">Liquid</option>
+              <option value="" style={styles.option}>Select Type</option>
+              <option value="tablet" style={styles.option}>Tablet</option>
+              <option value="cream" style={styles.option}>Cream</option>
+              <option value="liquid" style={styles.option}>Liquid</option>
             </select>
           </div>
 
@@ -143,7 +142,7 @@ function CreateProd() {
           >
             {loading ? (
               <span style={styles.loaderContent}>
-                <Loader2 className="animate-spin" size={18} /> Processing...
+                <Loader2 className="animate-spin" size={18} /> Syncing with Chain...
               </span>
             ) : "Register Product"}
           </button>
@@ -154,7 +153,7 @@ function CreateProd() {
 }
 
 const Label = ({ text }) => (
-    <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '4px', display: 'block' }}>
+    <label style={{ fontSize: '11px', fontWeight: '800', color: '#94A3B8', marginBottom: '6px', display: 'block', textTransform: 'uppercase', tracking: '0.05em' }}>
         {text}
     </label>
 );
@@ -162,95 +161,106 @@ const Label = ({ text }) => (
 const styles = {
   page: {
     minHeight: "100vh",
-    width: "100%", // ✅ FIXED: changed from 200vh to 100%
+    width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F1F5F9", // Soft slate background
+    backgroundColor: "#020617", // Deep Navy Dark
+    backgroundImage: "radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)",
     padding: "20px",
     boxSizing: "border-box"
   },
   card: {
     width: "100%",
-    maxWidth: "400px",
-    padding: "24px",
-    backgroundColor: "#FFFFFF",
-    borderRadius: "24px", // More modern rounded corners
-    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    maxWidth: "420px",
+    padding: "32px",
+    backgroundColor: "rgba(30, 41, 59, 0.5)", // Semi-transparent Slate
+    backdropFilter: "blur(12px)", // Glassmorphism
+    borderRadius: "28px",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
   },
   header: {
     textAlign: 'center',
-    marginBottom: '24px'
+    marginBottom: '32px'
   },
   iconBox: {
-    width: '48px',
-    height: '48px',
-    backgroundColor: '#EFF6FF',
-    borderRadius: '14px',
+    width: '56px',
+    height: '56px',
+    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 12px'
+    margin: '0 auto 16px',
+    border: "1px solid rgba(96, 165, 250, 0.2)"
   },
   title: {
-    fontSize: "24px",
+    fontSize: "26px",
     fontWeight: "800",
-    color: "#1E293B",
-    margin: '0 0 4px 0'
+    color: "#F8FAFC",
+    margin: '0 0 6px 0',
+    letterSpacing: '-0.02em'
   },
   subtitle: {
     fontSize: "13px",
-    color: "#64748B",
-    lineHeight: '1.4'
+    color: "#94A3B8",
+    lineHeight: '1.5'
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "20px",
   },
   inputGroup: {
     display: 'flex',
     flexDirection: 'column'
   },
   input: {
-    padding: "12px 16px",
-    borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    padding: "14px 18px",
+    borderRadius: "14px",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
     fontSize: "14px",
-    backgroundColor: "#F8FAFC",
-    color: "#0F172A",
+    backgroundColor: "#0F172A", // Dark Input
+    color: "#F1F5F9",
     outline: 'none',
-    transition: 'border 0.2s',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  option: {
+    backgroundColor: "#0F172A",
+    color: "#F1F5F9",
   },
   textarea: {
-    padding: "12px 16px",
-    borderRadius: "12px",
-    border: "1px solid #E2E8F0",
+    padding: "14px 18px",
+    borderRadius: "14px",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
     resize: "none",
     fontSize: "14px",
-    backgroundColor: "#F8FAFC",
-    color: "#0F172A",
+    backgroundColor: "#0F172A",
+    color: "#F1F5F9",
     outline: 'none',
+    transition: 'all 0.3s',
   },
   button: {
-    marginTop: "8px",
-    padding: "14px",
-    backgroundColor: "#2563EB",
+    marginTop: "12px",
+    padding: "16px",
+    backgroundColor: "#3B82F6",
     color: "#FFFFFF",
     border: "none",
-    borderRadius: "14px",
+    borderRadius: "16px",
     cursor: "pointer",
     fontSize: "16px",
-    fontWeight: "600",
-    boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.3)",
+    fontWeight: "700",
+    boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.3)",
+    transition: 'transform 0.2s, background 0.2s'
   },
   buttonDisabled: {
-    marginTop: "8px",
-    padding: "14px",
-    backgroundColor: "#CBD5E1",
-    color: "#94A3B8",
+    marginTop: "12px",
+    padding: "16px",
+    backgroundColor: "#1E293B",
+    color: "#475569",
     border: "none",
-    borderRadius: "14px",
+    borderRadius: "16px",
     fontSize: "16px",
     cursor: "not-allowed",
   },
@@ -258,13 +268,13 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '8px'
+    gap: '10px'
   },
   error: {
-    color: "#EF4444",
+    color: "#FB7185",
     fontSize: "11px",
     fontWeight: '600',
-    marginTop: "4px",
+    marginTop: "6px",
   },
 };
 
