@@ -27,6 +27,7 @@ export default function ProductListing() {
           try {
             const productipfs = await product.getProduct(id);
             const res = await axios.get(`https://ipfs.io/ipfs/${productipfs[0]}`);
+            console.log("Cid :",productipfs[0])
 
             const newProduct = {
               id: id,

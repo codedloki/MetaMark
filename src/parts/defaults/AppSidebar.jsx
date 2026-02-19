@@ -78,7 +78,9 @@ export default function AppSidebar() {
                 <span className={`${isActive(item.path) ? "text-white" : "text-slate-500 group-hover:text-blue-400"}`}>
                   {item.icon}
                 </span>
-                {item.name.toUpperCase()}
+                <span className="text-white">
+                  {item.name.toUpperCase()}
+                  </span>
               </Link>
             </SidebarMenuItem>
           ))}
