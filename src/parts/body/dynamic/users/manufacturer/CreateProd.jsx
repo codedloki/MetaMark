@@ -42,9 +42,40 @@ function CreateProd() {
     }
   };
 
+
+   const getDynamicFees = async () => {
+    try {
+      const feeData = await registry.provider.getFeeData();
+      
+      // Calculate a 20% buffer on the priority fee (tip)
+      const adjustedPriorityFee = (feeData.maxPriorityFeePerGas * 120n) / 100n;
+      
+      // Polygon Amoy hard minimum tip is 25 Gwei (25,000,000,000 wei)
+      const minPolygonTip = 25000000000n; 
+      const finalPriorityFee = adjustedPriorityFee > minPolygonTip ? adjustedPriorityFee : minPolygonTip;
+
+      // Calculate max fee: Base Fee (approx) + our new priority fee
+      // We add a buffer to the total max fee as well
+      const finalMaxFee = (feeData.maxFeePerGas * 130n) / 100n + finalPriorityFee;
+
+      return {
+        maxPriorityFeePerGas: finalPriorityFee,
+        maxFeePerGas: finalMaxFee
+      };
+    } catch (error) {
+      console.error("Gas estimation failed, using safe defaults", error);
+      // Fallback values if provider fails
+      return {
+        maxPriorityFeePerGas: 30000000000n, // 30 Gwei
+        maxFeePerGas: 60000000000n        // 60 Gwei
+      };
+    }
+  };
+
   const saveToBlock = async (hash) => {
     try {
-      const tx = await product.registerProduct(hash, Math.floor(Math.random() * 1000000));
+      const fees = await getDynamicFees();
+      const tx = await product.registerProduct(hash, Math.floor(Math.random() * 1000000),{...fees});
       const receipt = await tx.wait();
       
       const event = receipt.logs
