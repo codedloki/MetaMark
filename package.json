@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "qrcode": "^1.5.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@metamask/sdk": "^0.34.0",
@@ -33,7 +32,7 @@
     "@reown/appkit": "^1.8.17",
     "@reown/appkit-adapter-wagmi": "^1.8.17",
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-query": "^5.90.21",
     "@xmtp/browser-sdk": "^6.3.0",
     "@xmtp/xmtp-js": "^13.0.4",
     "axios": "^1.13.4",
@@ -49,6 +48,7 @@
     "lucide-react": "^0.563.0",
     "merkletreejs": "^0.6.0",
     "motion": "^12.29.2",
+    "qrcode": "^1.5.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-qr-code": "^2.0.18",
@@ -56,8 +56,8 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "vaul": "^1.1.2",
-    "viem": "^2.45.1",
-    "wagmi": "^3.4.1"
+    "viem": "^2.46.2",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
