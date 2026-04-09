@@ -123,7 +123,10 @@ function AddBatch() {
         headers: { Authorization: `Bearer ${import.meta.env.VITE_PINATA_JWT_SECRET}` }
       });
 
-      const tx = await product.addBatch(productId, BigInt(batchId), ipfsRes.data.IpfsHash, merkleRoot);
+      const tx = await product.addBatch(productId, BigInt(batchId), ipfsRes.data.IpfsHash, merkleRoot,{
+          maxFeePerGas: 30000000000,      // 30 Gwei
+          maxPriorityFeePerGas: 30000000000 // 30 Gwei
+        });
       await tx.wait();
       
       setSuccess("Batch Signed & Registered! QR Labels Ready. 🛡️");

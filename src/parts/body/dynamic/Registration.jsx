@@ -39,7 +39,11 @@ export default function Register() {
       const tx = await registry.registerCustomer(
         customdata.username.toLowerCase(), 
         Number(customdata.accType), 
-        customdata.contact
+        customdata.contact,
+        {
+          maxFeePerGas: 30000000000,      // 30 Gwei
+          maxPriorityFeePerGas: 30000000000 // 30 Gwei
+        }
       );
       await tx.wait();
       window.location.reload();
